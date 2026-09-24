@@ -22,7 +22,7 @@ export function deepBi(en: any, ar: any): any {
     return en.map((v, i) => deepBi(v, Array.isArray(ar) ? ar[i] : undefined))
   }
   if (en && typeof en === 'object') {
-    const keep = new Set(['id', 'icon', 'tone', 'matrix', 'ext', 'tunnel', 'plain', 'flow', 'dashed', 'kind', 'num'])
+    const keep = new Set(['id', 'icon', 'tone', 'matrix', 'ext', 'tunnel', 'plain', 'flow', 'dashed', 'kind', 'num', 'url', 'img'])
     const out: any = {}
     for (const k of Object.keys(en)) {
       out[k] = keep.has(k) ? en[k] : deepBi(en[k], ar ? ar[k] : undefined)

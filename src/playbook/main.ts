@@ -96,6 +96,7 @@ function moveCard(m: Move, i: number, lang: Lang): string {
     .join('')
   return `
   <article class="pb-move panel${checked}" data-id="${m.id}" data-phase="${m.phase}" style="transition-delay:${(i % 6) * 50}ms">
+    ${m.img ? `<figure class="pb-move-fig"><img src="/images/${m.img}" alt="" loading="lazy" /></figure>` : ''}
     <div class="pb-move-head">
       <button class="pb-check" role="checkbox" aria-checked="${!!done.has(m.id)}" aria-label="${m.title[lang]}" data-check="${m.id}">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -237,8 +238,6 @@ renderMyths()
 renderReads()
 maybeDevices()
 initReveals()
-/* re-observe dynamically rendered .reveal elements */
-initReveals()
 
 onChange((lang) => {
   applyStatic(lang)
@@ -248,6 +247,7 @@ onChange((lang) => {
   renderMyths()
   renderReads()
   maybeDevices()
+  initReveals() // re-observe freshly rendered .reveal elements
   ScrollTrigger.refresh()
 })
 

@@ -20,6 +20,7 @@ export interface Move {
   phase: number
   impact: 1 | 2 | 3
   effort: 1 | 2 | 3
+  img?: string
   title: L
   why: L
   how: LArr
@@ -140,7 +141,7 @@ const EN_MOVES = [
   },
   {
     id: 'vpn-wireguard',
-    phase: 3, impact: 2, effort: 2,
+    phase: 3, impact: 2, effort: 2, img: 'pb-net.jpg',
     title: 'Always-on VPN with a kill switch',
     why: 'On hostile networks the tunnel shields destinations from local observers — and the kill switch means “fail closed”, never “leak quietly”.',
     how: [
@@ -183,7 +184,7 @@ const EN_MOVES = [
   },
   {
     id: 'profiles',
-    phase: 2, impact: 3, effort: 2,
+    phase: 2, impact: 3, effort: 2, img: 'pb-comp.jpg',
     title: 'Split life into profiles',
     why: 'Compartments bound blast radius. Work, private, and disposable apps in one runtime is one bug away from everything.',
     how: [
@@ -209,7 +210,7 @@ const EN_MOVES = [
   },
   {
     id: 'os',
-    phase: 1, impact: 3, effort: 3,
+    phase: 1, impact: 3, effort: 3, img: 'pb-os.jpg',
     title: 'The OS move: verified hardening',
     why: 'The single largest step-up available: an OS whose entire purpose is attack-surface reduction, while keeping verified boot intact.',
     how: [
@@ -257,7 +258,7 @@ const EN_MOVES = [
   },
   {
     id: 'backup',
-    phase: 5, impact: 3, effort: 2,
+    phase: 5, impact: 3, effort: 2, img: 'pb-keys.jpg',
     title: 'Encrypted, offline, rehearsed backup',
     why: 'Ransomware, loss, and seizure all end the same way: without a backup you choose between paying and losing. An unencrypted backup is a second device to protect.',
     how: [
