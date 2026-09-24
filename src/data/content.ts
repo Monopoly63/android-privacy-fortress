@@ -12,7 +12,7 @@ export interface L { en: string; ar: string }
 export interface LArr { en: string[]; ar: string[] }
 
 /** Recursively zip EN/AR structures: every string leaf becomes {en, ar}. */
-function deepBi(en: any, ar: any): any {
+export function deepBi(en: any, ar: any): any {
   if (typeof en === 'string') return { en, ar: typeof ar === 'string' ? ar : en }
   if (Array.isArray(en)) {
     // arrays of strings zip wholesale into {en[], ar[]}; arrays of objects zip item-by-item

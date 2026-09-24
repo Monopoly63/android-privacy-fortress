@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="The Hardening Playbook — concrete, prioritized steps to harden an Android device: baseline tiers, impact-by-effort moves, real tools, and common myths debunked." />
+  <meta name="theme-color" content="#050608" />
+  <meta name="author" content="Abdulmoin Hablas" />
+  <meta name="copyright" content="© 2026 Abdulmoin Hablas — https://hablas.tech" />
+  <title>The Hardening Playbook — Android Privacy Fortress</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='3' width='14' height='26' rx='3' fill='none' stroke='%238fb3d9' stroke-width='2'/%3E%3Ccircle cx='16' cy='24' r='1.6' fill='%238fb3d9'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      var lang = 'en'
+      try {
+        var stored = localStorage.getItem('apf-lang')
+        lang = stored === 'ar' || stored === 'en'
+          ? stored
+          : ((navigator.language || '').toLowerCase().indexOf('ar') === 0 ? 'ar' : 'en')
+      } catch (e) {}
+      if (lang === 'ar') {
+        document.documentElement.lang = 'ar'
+        document.documentElement.dir = 'rtl'
+      }
+    })()
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#tiers" data-i18n="skip">Skip to content</a>
+
+  <div class="atmosphere" aria-hidden="true"></div>
+  <div class="grid-lines" aria-hidden="true"></div>
+
+  <div class="progress-rail" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <header class="nav" id="nav">
+    <a class="nav-brand" href="/index.html" aria-label="Android Privacy Fortress — home">
+      <svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><rect x="9" y="3" width="14" height="26" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="23.6" r="1.8" fill="currentColor"/></svg>
+      <span class="nav-brand-text">PRIVACY&nbsp;FORTRESS</span>
+      <span class="nav-brand-sub" data-i18n="nav.sub">SYSTEMS VIEW</span>
+    </a>
+    <nav class="nav-links" id="nav-links" aria-label="Sections">
+      <a href="/index.html" data-i18n="pb.nav.arch">Architecture</a>
+      <a href="#tiers" data-i18n="pb.nav.baseline">Baseline</a>
+      <a href="#moves" data-i18n="pb.nav.moves">Moves</a>
+      <a href="#myths" data-i18n="pb.nav.myths">Myths</a>
+      <a href="#reading" data-i18n="pb.nav.reading">Reading</a>
+    </nav>
+    <div class="nav-tools">
+      <div class="lang-switch" role="group" data-aria="lang.group">
+        <button type="button" class="lang-btn" id="lang-en" aria-pressed="true" lang="en">EN</button>
+        <button type="button" class="lang-btn" id="lang-ar" aria-pressed="false" lang="ar">ع</button>
+      </div>
+      <button class="nav-menu" id="nav-menu" aria-expanded="false" aria-controls="nav-links" data-aria="nav.menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ HERO ============ -->
+    <section class="pb-hero" id="top">
+      <div class="pb-hero-bg" aria-hidden="true">
+        <img src="/images/pb-hero.jpg" alt="" loading="eager" />
+      </div>
+      <div class="container pb-hero-inner">
+        <p class="eyebrow reveal" data-i18n="pb.eyebrow">The Hardening Playbook · From architecture to action</p>
+        <h1 class="display reveal d1" data-i18n="pb.title">Hardening begins<br />with a <em>move.</em></h1>
+        <p class="lede reveal d2" data-i18n="pb.lede">The architecture study explained why the layers exist. This playbook turns
+          them into concrete steps — ordered by impact against effort, grounded in real tools,
+          and tracked so progress survives the browser.</p>
+        <div class="hero-actions reveal d3">
+          <a class="btn btn-solid" href="#moves" data-i18n="pb.cta1">Start with the moves</a>
+          <a class="btn btn-ghost" href="/index.html" data-i18n="pb.cta2">Back to the architecture</a>
+        </div>
+        <ul class="hero-meta reveal d4" role="list">
+          <li><span class="mono" id="pb-stat-moves">16</span><span data-i18n="pb.s1">concrete moves</span></li>
+          <li><span class="mono">06</span><span data-i18n="pb.s2">phases</span></li>
+          <li><span class="mono">03</span><span data-i18n="pb.s3">device baselines</span></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ DEVICE BASELINES ============ -->
+    <section class="section" id="tiers">
+      <div class="container">
+        <p class="eyebrow reveal" data-i18n="pb.tiersEyebrow">01 · Pick your baseline</p>
+        <h2 class="h2 reveal d1" data-i18n="pb.tiersTitle">Three honest starting points.</h2>
+        <p class="lede reveal d2" data-i18n="pb.tiersLede">Hardening options depend on what the device allows. Pick the row that
+          matches your constraints — every move below applies to all three unless noted.</p>
+        <div class="pb-tiers reveal d3" id="pb-tiers"></div>
+      </div>
+    </section>
+
+    <!-- ============ MOVES ============ -->
+    <section class="section section-alt" id="moves">
+      <div class="container">
+        <p class="eyebrow reveal" data-i18n="pb.movesEyebrow">02 · The moves</p>
+        <h2 class="h2 reveal d1" data-i18n="pb.movesTitle">Highest impact first.</h2>
+        <p class="lede reveal d2" data-i18n="pb.movesLede">Every move is a real action on a real device. Check them off as you go —
+          the progress is kept in this browser, never sent anywhere.</p>
+
+        <div class="pb-progress panel reveal d3" id="pb-progress">
+          <div class="pb-progress-info">
+            <p class="pb-progress-count"><b id="pb-done">0</b><span class="pb-progress-of">/</span><span id="pb-total">16</span></p>
+            <span class="pb-progress-label mono" data-i18n="pb.progressLabel">MOVES DONE</span>
+          </div>
+          <div class="pb-progress-bar" aria-hidden="true"><div class="pb-progress-fill" id="pb-bar"></div></div>
+          <div class="pb-progress-side">
+            <span class="pb-progress-note mono" data-i18n="pb.progressSaved">STORED LOCALLY · NEVER SENT</span>
+            <button class="pb-reset" id="pb-reset" data-i18n="pb.progressReset">Reset progress</button>
+          </div>
+        </div>
+
+        <div class="pb-filters reveal d3" id="pb-filters" role="group" aria-label="Move filters"></div>
+        <div class="pb-moves" id="pb-moves"></div>
+
+        <div class="pb-devices panel reveal" id="pb-devices" hidden>
+          <p class="pb-devices-title mono" data-i18n="pb.deviceCallout">YOUR PROFILE SUGGESTS</p>
+          <div id="pb-device-list"></div>
+          <p class="figure-note mono" data-i18n="pb.deviceNote">GENERAL DIRECTIONS, NOT ENDORSEMENTS — VERIFY EVERYTHING AGAINST CURRENT SOURCES</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MYTHS ============ -->
+    <section class="section" id="myths">
+      <div class="container">
+        <p class="eyebrow reveal" data-i18n="pb.mythsEyebrow">03 · Calibration</p>
+        <h2 class="h2 reveal d1" data-i18n="pb.mythsTitle">Four myths worth retiring.</h2>
+        <p class="lede reveal d2" data-i18n="pb.mythsLede">Hardening is also about not spending trust on things that do not
+          deliver it.</p>
+        <div class="pb-myths reveal d3" id="pb-myths"></div>
+      </div>
+    </section>
+
+    <!-- ============ FURTHER READING ============ -->
+    <section class="section section-alt" id="reading">
+      <div class="container">
+        <p class="eyebrow reveal" data-i18n="pb.readEyebrow">04 · Primary sources</p>
+        <h2 class="h2 reveal d1" data-i18n="pb.readTitle">Go to the source, always.</h2>
+        <p class="lede reveal d2" data-i18n="pb.readLede">This playbook is a map. These are the territories — maintained by the
+          projects and organizations that build and research the actual systems.</p>
+        <ul class="pb-reads reveal d3" id="pb-reads"></ul>
+      </div>
+    </section>
+
+    <!-- ============ CROSS-CTA ============ -->
+    <section class="pb-back">
+      <div class="container pb-back-inner reveal">
+        <p class="pb-back-eyebrow mono" data-i18n="pb.backEyebrow">NEXT STEP</p>
+        <h2 class="h2" data-i18n="pb.backTitle">Know the move.<br />Now learn why it holds.</h2>
+        <p class="lede" data-i18n="pb.backLede">The architecture study walks the seven layers of the device —
+          from silicon root of trust to metadata — and shows what each one actually contains.</p>
+        <a class="btn btn-solid" href="/index.html" data-i18n="pb.backBtn">Explore the architecture</a>
+      </div>
+    </section>
+
+    <footer class="pb-footer">
+      <p class="footer-credit">
+        <span class="footer-copy">© 2026 Abdulmoin Hablas</span>
+        <span class="footer-sep" aria-hidden="true">·</span>
+        <span><span data-i18n="footer.designed">Designed &amp; engineered by</span>
+          <a class="footer-link" href="https://hablas.tech" target="_blank" rel="noopener">Abdulmoin Hablas</a></span>
+        <span class="footer-sep" aria-hidden="true">·</span>
+        <a class="footer-link footer-link-portfolio" href="https://hablas.tech" target="_blank" rel="noopener">hablas.tech</a>
+      </p>
+      <p class="mono footer-line" data-i18n="pb.footerLine">THE HARDENING PLAYBOOK · A COMPANION TO THE ANDROID PRIVACY FORTRESS</p>
+      <p class="footer-fine" data-i18n="pb.footerFine">Educational guidance, not security advice, and no endorsement of any product.
+        Steps describe general Android capabilities at the time of writing — verify against current official
+        documentation before acting. No step makes a device “unhackable”.</p>
+    </footer>
+
+  </main>
+
+  <script type="module" src="/src/playbook/main.ts"></script>
+</body>
+</html>
