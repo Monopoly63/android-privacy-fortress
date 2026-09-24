@@ -2,11 +2,13 @@
 
 import { PHYS_STATES, PHYS_THREATS, type PhysLevel } from '../data/content'
 import { swapPanel } from '../lib/util'
+import { getLang, onChange } from '../i18n'
+import { ui } from '../i18n/ui'
 
-const LEVEL_LABEL: Record<PhysLevel, string> = {
-  high: 'PROTECTED',
-  mid: 'LIMITED',
-  low: 'EXPOSED',
+const LEVEL_KEY: Record<PhysLevel, string> = {
+  high: 'phys.lHigh',
+  mid: 'phys.lMid',
+  low: 'phys.lLow',
 }
 
 export function initPhysical(): void {
@@ -18,46 +20,44 @@ export function initPhysical(): void {
   const detail: HTMLElement = detailEl
   const matrix: HTMLElement = matrixEl
 
-  let current = PHYS_STATES[1] // after reboot (BFU) is the headline state
-
-  const tabs = PHYS_STATES.map((s) => {
-    const b = document.createElement('button')
-    b.className = 'phys-state'
-    b.setAttribute('role', 'tab')
-    b.innerHTML = `<b>${s.label}</b><small>${s.sub}</small>`
-    b.addEventListener('click', () => select(s.id))
-    statesHost.appendChild(b)
-    return b
-  })
+  let currentId = PHYS_STATES[1].id // after reboot (BFU) is the headline state
+  const byId = (id: string) => PHYS_STATES.find((s) => s.id === id) ?? PHYS_STATES[0]
 
   function render() {
-    detail!.innerHTML = `
-      <h3 class="pd-name">${current.label}</h3>
-      <span class="pd-badge">${current.badge}</span>
-      <p class="pd-desc">${current.desc}</p>
-      <div class="pd-rows">
-        ${current.rows.map(([k, v]) => `<div class="pd-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}
-      </div>`
-    swapPanel(detail!)
+    const lang = getLang()
+    const current = byId(currentId)
 
-    matrix!.innerHTML = `
-      <p class="pm-title">PROTECTION LEVEL BY THREAT</p>
-      ${PHYS_THREATS.map((t, i) => {
-        const lvl = current.matrix[`t${i}`] as PhysLevel
-        return `<div class="pm-row"><span class="t">${t}</span><span class="pm-pill p-${lvl}">${LEVEL_LABEL[lvl]}</span></div>`
-      }).join('')}`
-
-    tabs.forEach((t, i) => {
-      const on = PHYS_STATES[i].id === current.id
-      t.classList.toggle('active', on)
-      t.setAttribute('aria-selected', String(on))
+    statesHost.innerHTML = ''
+    PHYS_STATES.forEach((s) => {
+      const b = document.createElement('button')
+      b.className = 'phys-state' + (s.id === current.id ? ' active' : '')
+      b.setAttribute('role', 'tab')
+      b.setAttribute('aria-selected', String(s.id === current.id))
+      b.innerHTML = `<b>${s.label[lang]}</b><small>${s.sub[lang]}</small>`
+      b.addEventListener('click', () => { currentId = s.id; render() })
+      statesHost.appendChild(b)
     })
-  }
 
-  function select(id: string) {
-    current = PHYS_STATES.find((s) => s.id === id)!
-    render()
+    detail.innerHTML = `
+      <h3 class="pd-name">${current.label[lang]}</h3>
+      <span class="pd-badge">${current.badge[lang]}</span>
+      <p class="pd-desc">${current.desc[lang]}</p>
+      <div class="pd-rows">
+        ${current.rows.map((pair) => {
+          const cells = (pair as any)[lang] as string[]
+          return `<div class="pd-row"><span class="k">${cells[0]}</span><span class="v">${cells[1]}</span></div>`
+        }).join('')}
+      </div>`
+    swapPanel(detail)
+
+    matrix.innerHTML = `
+      <p class="pm-title">${ui('phys.matrixTitle', lang)}</p>
+      ${PHYS_THREATS[lang].map((t, i) => {
+        const lvl = current.matrix[`t${i}`] as PhysLevel
+        return `<div class="pm-row"><span class="t">${t}</span><span class="pm-pill p-${lvl}">${ui(LEVEL_KEY[lvl], lang)}</span></div>`
+      }).join('')}`
   }
 
   render()
+  onChange(render)
 }

@@ -8,6 +8,8 @@ import * as THREE from 'three'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { buildDevice, buildParticles, buildGroundShadow, type DeviceParts } from './device'
 import { clamp, damp, ramp, prefersReducedMotion, webglSupported } from '../lib/util'
+import { getLang, type Lang } from '../i18n'
+import { ui } from '../i18n/ui'
 
 export interface StageHandle {
   ok: boolean
@@ -17,13 +19,13 @@ export interface StageHandle {
   setStage(i: number): void
   /** 0..1 — mirrors the canvas fade; rendering pauses entirely at 0. */
   setOpacity(v: number): void
+  /** Swap WebGL label texts + on-device screen language. */
+  setLang(lang: Lang): void
   dispose(): void
 }
 
-const STORY_LABELS = ['HARDWARE', 'SECURE BOOT', 'KERNEL · SELINUX', 'TEE · KEY CUSTODY', 'FRAMEWORK', 'APP SANDBOXES', 'USER / IDENTITY']
-
 export function createStage(canvas: HTMLCanvasElement, labelHost: HTMLElement): StageHandle {
-  if (!webglSupported()) return { ok: false, setHeroProgress() {}, setStoryProgress() {}, setPointer() {}, setStage() {}, setOpacity() {}, dispose() {} }
+  if (!webglSupported()) return { ok: false, setHeroProgress() {}, setStoryProgress() {}, setPointer() {}, setStage() {}, setOpacity() {}, setLang() {}, dispose() {} }
 
   const reduced = prefersReducedMotion()
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' })
@@ -53,7 +55,7 @@ export function createStage(canvas: HTMLCanvasElement, labelHost: HTMLElement): 
   scene.add(fill)
 
   /* device + environment */
-  const device: DeviceParts = buildDevice()
+  const device: DeviceParts = buildDevice(getLang())
   device.group.position.y = -0.5
   scene.add(device.group)
 
@@ -65,10 +67,11 @@ export function createStage(canvas: HTMLCanvasElement, labelHost: HTMLElement): 
   scene.add(particles)
 
   /* DOM labels for exploded layers */
-  const labelEls: HTMLDivElement[] = STORY_LABELS.map((txt) => {
+  const lang0 = getLang()
+  const labelEls: HTMLDivElement[] = Array.from({ length: 7 }, (_, i) => {
     const el = document.createElement('div')
     el.className = 'dev-label'
-    el.innerHTML = `<span class="dev-label-line"></span><span>${txt}</span>`
+    el.innerHTML = `<span class="dev-label-line"></span><span class="dev-label-text">${ui(`gl.${i}`, lang0)}</span>`
     labelHost.appendChild(el)
     return el
   })
@@ -227,6 +230,13 @@ export function createStage(canvas: HTMLCanvasElement, labelHost: HTMLElement): 
     setPointer(x: number, y: number) { pointerTX = clamp(x, -1, 1); pointerTY = clamp(y, -1, 1) },
     setStage(i: number) { activeStage = i },
     setOpacity(v: number) { visible = v > 0.02 },
+    setLang(lang: Lang) {
+      labelEls.forEach((el, i) => {
+        const txt = el.querySelector('.dev-label-text')
+        if (txt) txt.textContent = ui(`gl.${i}`, lang)
+      })
+      device.setScreenLang(lang)
+    },
     dispose() {
       running = false
       cancelAnimationFrame(raf)

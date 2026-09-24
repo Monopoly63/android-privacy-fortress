@@ -1,6 +1,7 @@
 /* ==========================================================================
    Android Privacy Fortress — application entry.
-   Boots the design system modules, the WebGL stage, and the scroll narrative.
+   Boots the design system modules, the WebGL stage, the scroll narrative,
+   and the EN/AR bilingual layer.
    ========================================================================== */
 
 import './style.css'
@@ -9,6 +10,8 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { createStage } from './three/stage'
 import { initReveals, prefersReducedMotion, clamp } from './lib/util'
+import { getLang, setLang, onChange, type Lang } from './i18n'
+import { ui } from './i18n/ui'
 import { initBoundaries } from './sections/boundaries'
 import { initArchitecture } from './sections/architecture'
 import { initDomains } from './sections/domains'
@@ -27,7 +30,7 @@ gsap.registerPlugin(ScrollTrigger)
 
 const reduced = prefersReducedMotion()
 
-/* ---------- static modules ---------- */
+/* ---------- static modules (each subscribes to language changes) ---------- */
 initBoundaries()
 initArchitecture()
 initDomains()
@@ -43,6 +46,48 @@ initSystem()
 initFinale()
 initReveals()
 
+/* ---------- i18n: static text, meta, toggle ---------- */
+function applyStatic(lang: Lang) {
+  document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n
+    if (key) el.innerHTML = ui(key, lang)
+  })
+  document.querySelectorAll<HTMLElement>('[data-bb]').forEach((el) => {
+    const key = `bb.${el.dataset.bb}`
+    el.innerHTML = ui(key, lang)
+  })
+  document.querySelectorAll<HTMLElement>('[data-aria]').forEach((el) => {
+    const key = el.dataset.aria
+    if (key) el.setAttribute('aria-label', ui(key, lang))
+  })
+  /* baseband node labels */
+  const nModem = document.getElementById('bb-node-modem')
+  const nTower = document.getElementById('bb-node-tower')
+  const nCarrier = document.getElementById('bb-node-carrier')
+  if (nModem) nModem.textContent = ui('bb.nModem', lang)
+  if (nTower) nTower.textContent = ui('bb.nTower', lang)
+  if (nCarrier) nCarrier.textContent = ui('bb.nCarrier', lang)
+
+  document.title = ui('meta.title', lang)
+  const desc = document.querySelector<HTMLMetaElement>('meta[name="description"]')
+  if (desc) desc.content = ui('meta.desc', lang)
+}
+
+function syncLangToggle(lang: Lang) {
+  const en = document.getElementById('lang-en')
+  const ar = document.getElementById('lang-ar')
+  en?.classList.toggle('active', lang === 'en')
+  ar?.classList.toggle('active', lang === 'ar')
+  en?.setAttribute('aria-pressed', String(lang === 'en'))
+  ar?.setAttribute('aria-pressed', String(lang === 'ar'))
+}
+
+document.getElementById('lang-en')?.addEventListener('click', () => setLang('en'))
+document.getElementById('lang-ar')?.addEventListener('click', () => setLang('ar'))
+
+applyStatic(getLang())
+syncLangToggle(getLang())
+
 /* ---------- smooth scroll (skipped for reduced motion) ---------- */
 let lenis: Lenis | null = null
 if (!reduced && typeof ResizeObserver !== 'undefined') {
@@ -55,31 +100,6 @@ if (!reduced && typeof ResizeObserver !== 'undefined') {
     lenis = null // native scroll remains fully functional
   }
 }
-
-/* mobile menu */
-const navMenu = document.getElementById('nav-menu')
-const navLinks = document.getElementById('nav-links')
-navMenu?.addEventListener('click', () => {
-  const open = navLinks!.classList.toggle('open')
-  navMenu.setAttribute('aria-expanded', String(open))
-})
-
-/* anchor navigation through lenis */
-document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
-  a.addEventListener('click', (e) => {
-    const id = a.getAttribute('href')!.slice(1)
-    const target = document.getElementById(id)
-    if (!target) return
-    e.preventDefault()
-    navLinks?.classList.remove('open')
-    navMenu?.setAttribute('aria-expanded', 'false')
-    if (lenis) lenis.scrollTo(target, { offset: 0 })
-    else target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' })
-    /* move focus for accessibility */
-    target.setAttribute('tabindex', '-1')
-    target.focus({ preventScroll: true })
-  })
-})
 
 /* ---------- WebGL stage ---------- */
 const canvas = document.getElementById('gl') as HTMLCanvasElement
@@ -102,6 +122,13 @@ if (!stage.ok) {
     }`
   document.head.appendChild(style)
 }
+
+/* language changes reach the WebGL layer here */
+onChange((lang) => {
+  applyStatic(lang)
+  syncLangToggle(lang)
+  stage.setLang(lang)
+})
 
 /* ---------- pointer parallax ---------- */
 window.addEventListener(
@@ -167,6 +194,31 @@ if (stage.ok) {
 } else {
   steps.forEach((s) => s.classList.add('active'))
 }
+
+/* ---------- mobile menu ---------- */
+const navMenu = document.getElementById('nav-menu')
+const navLinks = document.getElementById('nav-links')
+navMenu?.addEventListener('click', () => {
+  const open = navLinks!.classList.toggle('open')
+  navMenu.setAttribute('aria-expanded', String(open))
+})
+
+/* ---------- anchor navigation through lenis ---------- */
+document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach((a) => {
+  a.addEventListener('click', (e) => {
+    const id = a.getAttribute('href')!.slice(1)
+    const target = document.getElementById(id)
+    if (!target) return
+    e.preventDefault()
+    navLinks?.classList.remove('open')
+    navMenu?.setAttribute('aria-expanded', 'false')
+    if (lenis) lenis.scrollTo(target, { offset: 0 })
+    else target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' })
+    /* move focus for accessibility */
+    target.setAttribute('tabindex', '-1')
+    target.focus({ preventScroll: true })
+  })
+})
 
 /* ---------- nav progress ---------- */
 const progressFill = document.getElementById('progress-fill')

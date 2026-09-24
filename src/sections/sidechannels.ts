@@ -2,8 +2,9 @@
 
 import { SIDE_CHANNELS } from '../data/content'
 import { svgEl, prefersReducedMotion } from '../lib/util'
+import { getLang, onChange } from '../i18n'
 
-type VizBuilder = (host: SVGElement, reduced: boolean) => void
+type VizBuilder = (host: SVGElement) => void
 
 const STEEL = 'rgba(143,179,217,0.85)'
 const DIM = 'rgba(143,179,217,0.3)'
@@ -108,20 +109,28 @@ export function initSideChannels(): void {
     document.head.appendChild(st)
   }
 
-  grid.innerHTML = ''
-  SIDE_CHANNELS.forEach((sc) => {
-    const tile = document.createElement('article')
-    tile.className = 'sc-tile panel'
-    const vizHost = document.createElement('div')
-    vizHost.className = 'sc-viz'
-    const svg = svgEl('svg', { viewBox: '0 0 300 90', preserveAspectRatio: 'xMidYMid slice', 'aria-hidden': 'true' })
-    vizHost.appendChild(svg)
-    tile.appendChild(vizHost)
-    tile.insertAdjacentHTML(
-      'beforeend',
-      `<h3>${sc.name}</h3><p>${sc.desc}</p><span class="sc-mit"><b>${sc.mit.split('·')[0]}</b>·${sc.mit.split('·').slice(1).join('·')}</span>`,
-    )
-    grid.appendChild(tile)
-    VIZ[sc.id]?.(svg, reduced)
-  })
+  function render() {
+    const lang = getLang()
+    grid!.innerHTML = ''
+    SIDE_CHANNELS.forEach((sc) => {
+      const tile = document.createElement('article')
+      tile.className = 'sc-tile panel'
+      const vizHost = document.createElement('div')
+      vizHost.className = 'sc-viz'
+      const svg = svgEl('svg', { viewBox: '0 0 300 90', preserveAspectRatio: 'xMidYMid slice', 'aria-hidden': 'true' })
+      vizHost.appendChild(svg)
+      tile.appendChild(vizHost)
+      const mitParts = sc.mit[lang].split('·')
+      tile.insertAdjacentHTML(
+        'beforeend',
+        `<h3>${sc.name[lang]}</h3><p>${sc.desc[lang]}</p><span class="sc-mit"><b>${mitParts[0]}</b>·${mitParts.slice(1).join('·')}</span>`,
+      )
+      grid!.appendChild(tile)
+      VIZ[sc.id]?.(svg)
+    })
+  }
+
+  render()
+  if (!reduced) { /* keep animations; content re-render resets them (acceptable) */ }
+  onChange(render)
 }

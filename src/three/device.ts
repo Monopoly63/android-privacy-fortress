@@ -6,6 +6,7 @@
 
 import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js'
+import type { Lang } from '../i18n'
 
 export interface DeviceParts {
   group: THREE.Group
@@ -19,10 +20,12 @@ export interface DeviceParts {
   labelAnchors: THREE.Object3D[]
   setShellOpacity(v: number): void
   setScreenOpacity(v: number): void
+  setScreenLang(lang: Lang): void
 }
 
 /** Minimal "secure lock screen" drawn to a canvas texture. */
-function makeScreenTexture(): THREE.CanvasTexture {
+function makeScreenTexture(initialLang: Lang): { tex: THREE.CanvasTexture; setLang: (l: Lang) => void } {
+  let lang = initialLang
   const c = document.createElement('canvas')
   c.width = 512
   c.height = 1024
@@ -32,6 +35,9 @@ function makeScreenTexture(): THREE.CanvasTexture {
   tex.colorSpace = THREE.SRGBColorSpace
 
   const draw = () => {
+    const ar = lang === 'ar'
+    const displayFont = ar ? '"IBM Plex Sans Arabic", system-ui, sans-serif' : '"Space Grotesk", system-ui, sans-serif'
+    const bodyFont = ar ? '"IBM Plex Sans Arabic", system-ui, sans-serif' : '"Inter", system-ui, sans-serif'
 
   const bg = g.createLinearGradient(0, 0, 0, 1024)
   bg.addColorStop(0, '#0a0d12')
@@ -70,17 +76,17 @@ function makeScreenTexture(): THREE.CanvasTexture {
 
   // time + date
   g.fillStyle = 'rgba(238,241,244,0.92)'
-  g.font = '600 88px "Space Grotesk", system-ui, sans-serif'
+  g.font = `600 88px ${displayFont}`
   g.textAlign = 'center'
   g.fillText('09:41', 256, 580)
   g.fillStyle = 'rgba(166,174,184,0.8)'
-  g.font = '400 24px "Inter", system-ui, sans-serif'
-  g.fillText('Thursday, September 24', 256, 622)
+  g.font = `400 24px ${bodyFont}`
+  g.fillText(ar ? 'الخميس، 24 سبتمبر' : 'Thursday, September 24', 256, 622)
 
   // footer
   g.fillStyle = 'rgba(143,179,217,0.55)'
   g.font = '500 15px "JetBrains Mono", monospace'
-  g.fillText('FBE ACTIVE · KEYS SEALED', 256, 952)
+  g.fillText(ar ? 'التشفير نشط · المفاتيح مختومة' : 'FBE ACTIVE · KEYS SEALED', 256, 952)
   }
 
   draw()
@@ -91,10 +97,17 @@ function makeScreenTexture(): THREE.CanvasTexture {
       tex.needsUpdate = true
     })
   }
-  return tex
+  return {
+    tex,
+    setLang(l: Lang) {
+      lang = l
+      draw()
+      tex.needsUpdate = true
+    },
+  }
 }
 
-export function buildDevice(): DeviceParts {
+export function buildDevice(lang: Lang): DeviceParts {
   const group = new THREE.Group()
 
   const W = 0.72
@@ -141,8 +154,9 @@ export function buildDevice(): DeviceParts {
   group.add(frontGlass)
 
   /* ---- screen ---- */
+  const screenTex = makeScreenTexture(lang)
   const screenMat = new THREE.MeshBasicMaterial({
-    map: makeScreenTexture(),
+    map: screenTex.tex,
     transparent: true,
     toneMapped: false,
   })
@@ -276,6 +290,9 @@ export function buildDevice(): DeviceParts {
     setScreenOpacity(v: number) {
       screenMat.opacity = v
       screen.visible = v > 0.02
+    },
+    setScreenLang(l: Lang) {
+      screenTex.setLang(l)
     },
   }
 }

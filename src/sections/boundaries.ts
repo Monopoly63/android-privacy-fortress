@@ -2,6 +2,8 @@
 
 import { BOUND_LAYERS } from '../data/content'
 import { swapPanel } from '../lib/util'
+import { getLang, onChange } from '../i18n'
+import { ui } from '../i18n/ui'
 
 export function initBoundaries(): void {
   const stackHost = document.getElementById('bounds-stack')
@@ -13,67 +15,63 @@ export function initBoundaries(): void {
   let locked: string | null = null
   let hovered: string | null = null
 
-  const rows = BOUND_LAYERS.map((layer, i) => {
-    const btn = document.createElement('button')
-    btn.className = 'bound-row'
-    btn.setAttribute('role', 'tab')
-    btn.setAttribute('aria-selected', 'false')
-    btn.dataset.id = layer.id
-    btn.innerHTML = `
-      <span class="b-idx">${String(i + 1).padStart(2, '0')}</span>
-      <span><span class="b-name">${layer.name}</span><span class="b-sub">${layer.sub}</span></span>
-      <span class="b-tag">${layer.tag}</span>`
-    stack.appendChild(btn)
-    return btn
-  })
-
-  function render(id: string) {
-    const l = BOUND_LAYERS.find((x) => x.id === id)!
-    detail.innerHTML = `
-      <p class="bd-role">${l.role}</p>
-      <h3 class="bd-name">${l.name}</h3>
-      <p class="bd-desc">${l.desc}</p>
-      <div class="bd-cols">
-        <div class="bd-col"><h4>Can access</h4><ul>${l.access.map((a) => `<li>${a}</li>`).join('')}</ul></div>
-        <div class="bd-col"><h4>Constrained by</h4><ul>${l.constrained.map((a) => `<li>${a}</li>`).join('')}</ul></div>
-        <div class="bd-col"><h4>Isolated from</h4><ul>${l.isolated.map((a) => `<li>${a}</li>`).join('')}</ul></div>
-      </div>
-      <p class="bd-note">${l.note}</p>`
-    swapPanel(detail)
-    for (const row of rows) {
-      const on = row.dataset.id === id
-      row.classList.toggle('active', on)
-      row.setAttribute('aria-selected', String(on))
-    }
-  }
-
-  function refresh() {
+  function render() {
+    const lang = getLang()
     const current = hovered ?? locked ?? 'kernel'
+    const layer = BOUND_LAYERS.find((x) => x.id === current) ?? BOUND_LAYERS[2]
+
+    stack.innerHTML = ''
+    BOUND_LAYERS.forEach((l, i) => {
+      const btn = document.createElement('button')
+      btn.className = 'bound-row' + (l.id === current ? ' active' : '')
+      btn.setAttribute('role', 'tab')
+      btn.setAttribute('aria-selected', String(l.id === current))
+      btn.dataset.id = l.id
+      btn.innerHTML = `
+        <span class="b-idx">${String(i + 1).padStart(2, '0')}</span>
+        <span><span class="b-name">${l.name[lang]}</span><span class="b-sub">${l.sub[lang]}</span></span>
+        <span class="b-tag">${l.tag[lang]}</span>`
+      stack.appendChild(btn)
+    })
     stack.classList.toggle('dimming', hovered !== null || locked !== null)
-    render(current)
+
+    detail.innerHTML = `
+      <p class="bd-role">${layer.role[lang]}</p>
+      <h3 class="bd-name">${layer.name[lang]}</h3>
+      <p class="bd-desc">${layer.desc[lang]}</p>
+      <div class="bd-cols">
+        <div class="bd-col"><h4>${ui('bounds.cAccess', lang)}</h4><ul>${layer.access[lang].map((a) => `<li>${a}</li>`).join('')}</ul></div>
+        <div class="bd-col"><h4>${ui('bounds.cConstr', lang)}</h4><ul>${layer.constrained[lang].map((a) => `<li>${a}</li>`).join('')}</ul></div>
+        <div class="bd-col"><h4>${ui('bounds.cIso', lang)}</h4><ul>${layer.isolated[lang].map((a) => `<li>${a}</li>`).join('')}</ul></div>
+      </div>
+      <p class="bd-note">${layer.note[lang]}</p>`
+    swapPanel(detail)
   }
 
-  rows.forEach((row) => {
-    row.addEventListener('mouseenter', () => { hovered = row.dataset.id!; refresh() })
-    row.addEventListener('focus', () => { hovered = row.dataset.id!; refresh() })
-    row.addEventListener('mouseleave', () => { hovered = null; refresh() })
-    row.addEventListener('blur', () => { hovered = null; refresh() })
-    row.addEventListener('click', () => {
+  function bindStack() {
+    stack.addEventListener('mouseover', (e) => {
+      const row = (e.target as HTMLElement).closest('.bound-row') as HTMLElement | null
+      if (row) { hovered = row.dataset.id ?? null; render() }
+    })
+    stack.addEventListener('mouseout', () => { hovered = null; render() })
+    stack.addEventListener('focusin', (e) => {
+      const row = (e.target as HTMLElement).closest('.bound-row') as HTMLElement | null
+      if (row) { hovered = row.dataset.id ?? null; render() }
+    })
+    stack.addEventListener('focusout', () => { hovered = null; render() })
+    stack.addEventListener('click', (e) => {
+      const row = (e.target as HTMLElement).closest('.bound-row') as HTMLElement | null
+      if (!row) return
       locked = locked === row.dataset.id ? null : row.dataset.id!
-      refresh()
+      render()
     })
-    row.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        locked = locked === row.dataset.id ? null : row.dataset.id!
-        refresh()
-      }
-    })
-  })
+  }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && locked) { locked = null; refresh() }
+    if (e.key === 'Escape' && locked) { locked = null; render() }
   })
 
-  refresh()
+  bindStack()
+  render()
+  onChange(render)
 }

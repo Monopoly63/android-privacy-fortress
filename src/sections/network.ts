@@ -2,6 +2,8 @@
 
 import { NET_MODES, type NetMode } from '../data/content'
 import { svgEl, prefersReducedMotion } from '../lib/util'
+import { getLang, onChange } from '../i18n'
+import { ui } from '../i18n/ui'
 
 export function initNetwork(): void {
   const tabsHostEl = document.getElementById('net-modes')
@@ -15,15 +17,12 @@ export function initNetwork(): void {
   const factsHost: HTMLElement = factsEl
 
   const reduced = prefersReducedMotion()
-  let mode: NetMode = NET_MODES[0]
+  let modeId: NetMode['id'] = 'direct'
   let raf = 0
   let packets: Array<{ el: SVGCircleElement; offset: number; plain: boolean }> = []
   let paths: Array<{ el: SVGPathElement; len: number }> = []
 
-  const tabs = Array.from(tabsHost.querySelectorAll<HTMLButtonElement>('.net-mode'))
-  tabs.forEach((t) =>
-    t.addEventListener('click', () => setMode(NET_MODES.find((m) => m.id === t.dataset.mode)!)),
-  )
+  const byId = (id: string) => NET_MODES.find((m) => m.id === id) ?? NET_MODES[0]
 
   function edgePath(a: { x: number; y: number }, b: { x: number; y: number }): string {
     const mx = (a.x + b.x) / 2
@@ -37,7 +36,22 @@ export function initNetwork(): void {
     return `M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`
   }
 
-  function render(m: NetMode) {
+  function render() {
+    const lang = getLang()
+    const m = byId(modeId)
+
+    /* tab labels + subs live in the static HTML — refresh them */
+    tabsHost.querySelectorAll<HTMLButtonElement>('.net-mode').forEach((t) => {
+      const id = t.dataset.mode as NetMode['id']
+      const label = t.querySelector('.net-mode-label')!
+      const sub = t.querySelector('small')!
+      label.textContent = ui(`net.${id}`, lang)
+      sub.textContent = ui(`net.${id}Sub`, lang)
+      const on = id === m.id
+      t.classList.toggle('active', on)
+      t.setAttribute('aria-selected', String(on))
+    })
+
     svg.innerHTML = ''
     packets = []
     paths = []
@@ -68,9 +82,9 @@ export function initNetwork(): void {
       const g = svgEl('g', {})
       g.appendChild(svgEl('circle', { cx: n.x, cy: n.y, r: 34, class: 'net-node-circle' }))
       const label = svgEl('text', { x: n.x, y: n.y + 52, 'text-anchor': 'middle', class: 'net-node-label' })
-      label.textContent = n.label
+      label.textContent = n.label[lang]
       const sub = svgEl('text', { x: n.x, y: n.y + 66, 'text-anchor': 'middle', class: 'net-node-sub' })
-      sub.textContent = n.sub
+      sub.textContent = n.sub[lang]
       const dot = svgEl('circle', { cx: n.x, cy: n.y, r: 3.5, fill: n.ext ? 'rgba(203,178,122,0.9)' : 'rgba(143,179,217,0.95)' })
       g.appendChild(dot)
       g.appendChild(label)
@@ -80,7 +94,7 @@ export function initNetwork(): void {
 
     /* packets */
     const perEdge = reduced ? 1 : 2
-    paths.forEach((path, pi) => {
+    paths.forEach((_, pi) => {
       const edgeDef = m.edges[pi]
       for (let k = 0; k < perEdge; k++) {
         const el = svgEl('circle', { r: 4, class: 'net-packet' + (edgeDef.plain ? ' plain' : '') }) as SVGCircleElement
@@ -89,14 +103,23 @@ export function initNetwork(): void {
       }
     })
 
-    caption!.textContent = m.caption
-    factsHost!.innerHTML = m.facts
-      .map((f) => `<div class="net-fact"><b>${f.k}</b>${f.v}</div>`)
+    caption.textContent = m.caption[lang]
+    factsHost.innerHTML = m.facts
+      .map((f) => `<div class="net-fact"><b>${f.k[lang]}</b>${f.v[lang]}</div>`)
       .join('')
-    tabs.forEach((t) => {
-      const on = t.dataset.mode === m.id
-      t.classList.toggle('active', on)
-      t.setAttribute('aria-selected', String(on))
+
+    if (reduced) placeStatic()
+  }
+
+  function placeStatic() {
+    packets.forEach((p, i) => {
+      const path = paths[i % paths.length]
+      if (!path || typeof path.el.getPointAtLength !== 'function') return
+      try {
+        const pt = path.el.getPointAtLength(0.5 * path.len)
+        p.el.setAttribute('cx', String(pt.x))
+        p.el.setAttribute('cy', String(pt.y))
+      } catch { /* skip */ }
     })
   }
 
@@ -116,25 +139,14 @@ export function initNetwork(): void {
     })
   }
 
-  function setMode(m: NetMode) {
-    mode = m
-    render(m)
-  }
+  tabsHost.addEventListener('click', (e) => {
+    const tab = (e.target as HTMLElement).closest('.net-mode') as HTMLElement | null
+    if (!tab?.dataset.mode) return
+    modeId = tab.dataset.mode as NetMode['id']
+    render()
+  })
 
-  render(mode)
+  render()
+  onChange(render)
   if (!reduced) raf = requestAnimationFrame(tick)
-  else {
-    /* static packets at midpoints for reduced motion */
-    const place = () =>
-      packets.forEach((p, i) => {
-        const path = paths[i % paths.length]
-        if (!path || typeof path.el.getPointAtLength !== 'function') return
-        try {
-          const pt = path.el.getPointAtLength(0.5 * path.len)
-          p.el.setAttribute('cx', String(pt.x))
-          p.el.setAttribute('cy', String(pt.y))
-        } catch { /* skip */ }
-      })
-    place()
-  }
 }

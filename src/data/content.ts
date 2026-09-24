@@ -1,25 +1,53 @@
 /* ==========================================================================
-   Content model — technically rigorous copy for every interactive module.
-   Language is deliberately careful: layers "raise cost" and "shrink surface";
-   nothing is ever claimed to be absolute.
+   Content model — bilingual (EN/AR). English data below; Arabic mirror in
+   content-ar.ts; `deepBi` zips them into {en, ar} leaf strings.
+   Language is deliberately careful in both: layers "raise cost" and
+   "shrink surface"; nothing is ever claimed to be absolute.
    ========================================================================== */
+
+import AR from './content-ar'
+
+export type Lang = 'en' | 'ar'
+export interface L { en: string; ar: string }
+export interface LArr { en: string[]; ar: string[] }
+
+/** Recursively zip EN/AR structures: every string leaf becomes {en, ar}. */
+function deepBi(en: any, ar: any): any {
+  if (typeof en === 'string') return { en, ar: typeof ar === 'string' ? ar : en }
+  if (Array.isArray(en)) {
+    // arrays of strings zip wholesale into {en[], ar[]}; arrays of objects zip item-by-item
+    if (en.length === 0 || typeof en[0] === 'string') {
+      return { en, ar: Array.isArray(ar) ? ar : en }
+    }
+    return en.map((v, i) => deepBi(v, Array.isArray(ar) ? ar[i] : undefined))
+  }
+  if (en && typeof en === 'object') {
+    const keep = new Set(['id', 'icon', 'tone', 'matrix', 'ext', 'tunnel', 'plain', 'flow', 'dashed', 'kind', 'num'])
+    const out: any = {}
+    for (const k of Object.keys(en)) {
+      out[k] = keep.has(k) ? en[k] : deepBi(en[k], ar ? ar[k] : undefined)
+    }
+    return out
+  }
+  return en
+}
 
 /* ---------- 04 · Trust boundaries -------------------------------------- */
 
 export interface BoundLayer {
   id: string
-  name: string
-  sub: string
-  tag: string
-  role: string
-  desc: string
-  access: string[]
-  constrained: string[]
-  isolated: string[]
-  note: string
+  name: L
+  sub: L
+  tag: L
+  role: L
+  desc: L
+  access: LArr
+  constrained: LArr
+  isolated: LArr
+  note: L
 }
 
-export const BOUND_LAYERS: BoundLayer[] = [
+const EN_BOUND = [
   {
     id: 'apps',
     name: 'Applications',
@@ -128,11 +156,15 @@ export const BOUND_LAYERS: BoundLayer[] = [
     isolated: ['From the device’s security model entirely'],
     note: 'THE DEVICE CAN ONLY CHOOSE WHAT IT REVEALS — AND TO WHICH OBSERVER.',
   },
-]
+] as const
+
+export const BOUND_LAYERS = deepBi(EN_BOUND, AR.bound) as BoundLayer[]
 
 /* ---------- 05 · Architecture stacks ------------------------------------ */
 
-export const ARCH_DEVICE = [
+export interface ArchNode { name: L; sub: L; ext?: boolean }
+
+const EN_ARCH_DEVICE = [
   { name: 'USER / IDENTITY', sub: 'accounts, profiles, intent' },
   { name: 'APPLICATION LAYER', sub: 'sandboxed apps, profiles, compartments' },
   { name: 'ANDROID FRAMEWORK', sub: 'permissions, Binder IPC, services' },
@@ -142,7 +174,7 @@ export const ARCH_DEVICE = [
   { name: 'HARDWARE', sub: 'SoC, fuses, secure element, sensors' },
 ]
 
-export const ARCH_NETWORK = [
+const EN_ARCH_NETWORK = [
   { name: 'NETWORK STACK', sub: 'DNS, TLS, routing, egress rules' },
   { name: 'VPN / TOR / DNS', sub: 'tunnels, onion routing, DoT/DoH' },
   { name: 'CELLULAR MODEM', sub: 'baseband firmware, own trust domain' },
@@ -150,22 +182,25 @@ export const ARCH_NETWORK = [
   { name: 'CARRIER', sub: 'subscriber records, metadata', ext: true },
 ]
 
+export const ARCH_DEVICE = deepBi(EN_ARCH_DEVICE, AR.archDevice) as ArchNode[]
+export const ARCH_NETWORK = deepBi(EN_ARCH_NETWORK, AR.archNetwork) as ArchNode[]
+
 /* ---------- 06 · Ten security domains ----------------------------------- */
 
 export interface Domain {
   num: string
-  title: string
-  tagline: string
-  objective: string
-  surface: string[]
-  assets: string[]
-  tech: string[]
-  attack: string
-  mitigation: string
-  relations: string
+  title: L
+  tagline: L
+  objective: L
+  surface: LArr
+  assets: LArr
+  tech: LArr
+  attack: L
+  mitigation: L
+  relations: L
 }
 
-export const DOMAINS: Domain[] = [
+const EN_DOMAINS = [
   {
     num: '01',
     title: 'Threat Modeling',
@@ -232,7 +267,7 @@ export const DOMAINS: Domain[] = [
     tagline: 'FBE · Keystore · KeyMint',
     objective: 'Make data meaningless without keys that live in hardware and are bound to the user’s credential — with different keys for different states and profiles.',
     surface: ['Key-management APIs', 'Data stored outside encrypted areas', 'Key availability while the device is unlocked'],
-    assets: ['User data at rest', 'Key material itself', 'Per-profile key hierarchies'],
+    assets: ['User data at rest', 'Key material itself', 'Per-profile and per-file key hierarchies'],
     tech: ['File-Based Encryption (AES-256)', 'KeyMint / Android Keystore', 'Gatekeeper (credential verification in TEE)', 'Weaver (rate-limit budget)', 'Per-profile and per-file keys'],
     attack: 'Offline decryption of extracted storage chips; online brute force of the lock credential; key-extraction attempts against hardware.',
     mitigation: 'Hardware-bound keys wrapped by the passcode, throttled guesses, and key states that are discarded on reboot until the credential is entered again.',
@@ -286,7 +321,9 @@ export const DOMAINS: Domain[] = [
     mitigation: 'Signature verification end-to-end, build reproducibility for audit, logs scoped and minimized, backups encrypted client-side, rehearsed recovery.',
     relations: 'Extends trust across time — before first boot and long after it.',
   },
-]
+] as const
+
+export const DOMAINS = deepBi(EN_DOMAINS, AR.domains) as Domain[]
 
 /* ---------- 07 · Simulator scenarios ------------------------------------ */
 
@@ -294,22 +331,22 @@ export type SimTone = 'ok' | 'block' | 'warn' | 'neutral'
 
 export interface SimNode {
   icon: string
-  label: string
-  sub?: string
-  status: string
+  label: L
+  sub?: L
+  status: L
   tone: SimTone
 }
 
 export interface Scenario {
   id: string
-  title: string
-  sub: string
-  note: string
+  title: L
+  sub: L
+  note: L
   nodes: SimNode[]
-  log: Array<{ t: string; tone?: 'ok' | 'bad' | 'warn' }>
+  log: Array<{ t: L; tone?: 'ok' | 'bad' | 'warn' }>
 }
 
-export const SCENARIOS: Scenario[] = [
+const EN_SCENARIOS = [
   {
     id: 'malicious-app',
     title: 'Malicious app',
@@ -376,24 +413,26 @@ export const SCENARIOS: Scenario[] = [
       { t: 'RESULT: content privacy achieved; metadata only reduced.', tone: 'warn' },
     ],
   },
-]
+] as const
+
+export const SCENARIOS = deepBi(EN_SCENARIOS, AR.scenarios) as Scenario[]
 
 /* ---------- 08 · Network modes ------------------------------------------ */
 
-export interface NetNodeDef { label: string; sub: string; x: number; y: number; ext?: boolean }
+export interface NetNodeDef { label: L; sub: L; x: number; y: number; ext?: boolean }
 export interface NetEdgeDef { from: number; to: number; tunnel?: boolean; plain?: boolean }
 
 export interface NetMode {
   id: 'direct' | 'vpn' | 'tor'
-  label: string
-  sub: string
-  caption: string
+  label: L
+  sub: L
+  caption: L
   nodes: NetNodeDef[]
   edges: NetEdgeDef[]
-  facts: Array<{ k: string; v: string }>
+  facts: Array<{ k: L; v: L }>
 }
 
-export const NET_MODES: NetMode[] = [
+const EN_NET = [
   {
     id: 'direct',
     label: 'Direct',
@@ -463,11 +502,15 @@ export const NET_MODES: NetMode[] = [
       { k: 'Residual metadata', v: 'End-to-end timing correlation remains a research-level concern against global observers.' },
     ],
   },
-]
+] as const
+
+export const NET_MODES = deepBi(EN_NET, AR.net) as NetMode[]
 
 /* ---------- 08b · Metadata rows ------------------------------------------ */
 
-export const METADATA_ROWS = [
+export interface KV { k: L; v: L }
+
+const EN_META = [
   { k: 'TIME', v: '02:14:07 UTC · every exchange timestamped' },
   { k: 'IP ADDRESS', v: 'your network location, roughly where you are' },
   { k: 'DESTINATION', v: 'who you contacted, even if content is sealed' },
@@ -475,7 +518,9 @@ export const METADATA_ROWS = [
   { k: 'FREQUENCY', v: '214 exchanges/day with one counterparty' },
   { k: 'CELL TOWER', v: 'radio association places you on a map' },
   { k: 'DEVICE IDS', v: 'IMEI / MAC / Android ID correlation' },
-]
+] as const
+
+export const METADATA_ROWS = deepBi(EN_META, AR.metaRows) as KV[]
 
 /* ---------- 10 · Physical states ------------------------------------------ */
 
@@ -483,15 +528,15 @@ export type PhysLevel = 'high' | 'mid' | 'low'
 
 export interface PhysState {
   id: string
-  label: string
-  sub: string
-  badge: string
-  desc: string
-  rows: Array<[string, string]>
+  label: L
+  sub: L
+  badge: L
+  desc: L
+  rows: Array<LArr>
   matrix: Record<string, PhysLevel>
 }
 
-export const PHYS_THREATS = [
+const EN_PHYS_THREATS = [
   'Storage extraction (chip-off / imaging)',
   'Passcode brute force',
   'USB / malicious accessory',
@@ -499,7 +544,9 @@ export const PHYS_THREATS = [
   'Cold boot / key residue',
 ]
 
-export const PHYS_STATES: PhysState[] = [
+export const PHYS_THREATS = deepBi(EN_PHYS_THREATS, AR.physThreats) as LArr
+
+const EN_PHYS = [
   {
     id: 'off',
     label: 'Powered off',
@@ -578,155 +625,91 @@ export const PHYS_STATES: PhysState[] = [
     ],
     matrix: { t0: 'mid', t1: 'mid', t2: 'low', t3: 'mid', t4: 'low' },
   },
-]
+] as const
+
+export const PHYS_STATES = deepBi(EN_PHYS, AR.phys) as PhysState[]
 
 /* ---------- 11 · Side channels --------------------------------------------- */
 
 export interface SideChannel {
   id: string
-  name: string
-  desc: string
-  mit: string
+  name: L
+  desc: L
+  mit: L
 }
 
-export const SIDE_CHANNELS: SideChannel[] = [
-  {
-    id: 'timing',
-    name: 'Timing',
-    desc: 'How long an operation takes can depend on secret data. Comparing response times lets an observer infer bits without ever reading them.',
-    mit: 'MITIGATION · CONSTANT-TIME IMPLEMENTATIONS OF COMPARISONS AND CRYPTO',
-  },
-  {
-    id: 'power',
-    name: 'Power draw',
-    desc: 'Different instructions draw different current. With physical access, power traces can be statistically matched against key operations.',
-    mit: 'MITIGATION · MASKING AND BLINDING IN HARDWARE / SECURE ELEMENTS',
-  },
-  {
-    id: 'em',
-    name: 'Electromagnetic',
-    desc: 'Circuitry radiates faint emissions correlated with what it is computing. Nearby antennas can, in research settings, recover fragments.',
-    mit: 'MITIGATION · SHIELDING, LAYOUT DISCIPLINE, AND PROXIMITY REQUIRED',
-  },
-  {
-    id: 'cache',
-    name: 'Cache behavior',
-    desc: 'Which memory lines a process touches leaves footprints in shared caches. Co-located code can sometimes infer another’s access patterns.',
-    mit: 'MITIGATION · ISOLATION, PARTITIONING, AND ACCESS-PATTERN-AWARE DESIGN',
-  },
-  {
-    id: 'sensors',
-    name: 'Sensor inference',
-    desc: 'Motion, audio, and ambient sensors can be repurposed — keystroke rhythm from the accelerometer, for example — often without a “dangerous” permission.',
-    mit: 'MITIGATION · SENSOR ACCESS GOVERNANCE AND SAMPLING RESTRICTIONS',
-  },
-  {
-    id: 'traffic',
-    name: 'Traffic patterns',
-    desc: 'Encrypted flows still have size and rhythm. A burst of a characteristic size at a characteristic moment can identify an action.',
-    mit: 'MITIGATION · PADDING, COVER TRAFFIC, AND BATCHING — AT A COST',
-  },
-]
+const EN_SC = [
+  { id: 'timing', name: 'Timing', desc: 'How long an operation takes can depend on secret data. Comparing response times lets an observer infer bits without ever reading them.', mit: 'MITIGATION · CONSTANT-TIME IMPLEMENTATIONS OF COMPARISONS AND CRYPTO' },
+  { id: 'power', name: 'Power draw', desc: 'Different instructions draw different current. With physical access, power traces can be statistically matched against key operations.', mit: 'MITIGATION · MASKING AND BLINDING IN HARDWARE / SECURE ELEMENTS' },
+  { id: 'em', name: 'Electromagnetic', desc: 'Circuitry radiates faint emissions correlated with what it is computing. Nearby antennas can, in research settings, recover fragments.', mit: 'MITIGATION · SHIELDING, LAYOUT DISCIPLINE, AND PROXIMITY REQUIRED' },
+  { id: 'cache', name: 'Cache behavior', desc: 'Which memory lines a process touches leaves footprints in shared caches. Co-located code can sometimes infer another’s access patterns.', mit: 'MITIGATION · ISOLATION, PARTITIONING, AND ACCESS-PATTERN-AWARE DESIGN' },
+  { id: 'sensors', name: 'Sensor inference', desc: 'Motion, audio, and ambient sensors can be repurposed — keystroke rhythm from the accelerometer, for example — often without a “dangerous” permission.', mit: 'MITIGATION · SENSOR ACCESS GOVERNANCE AND SAMPLING RESTRICTIONS' },
+  { id: 'traffic', name: 'Traffic patterns', desc: 'Encrypted flows still have size and rhythm. A burst of a characteristic size at a characteristic moment can identify an action.', mit: 'MITIGATION · PADDING, COVER TRAFFIC, AND BATCHING — AT A COST' },
+] as const
+
+export const SIDE_CHANNELS = deepBi(EN_SC, AR.sideChannels) as SideChannel[]
 
 /* ---------- 12 · Supply chain ---------------------------------------------- */
 
 export interface ChainStage {
   id: string
-  name: string
-  tag: string
-  check: string
-  body: string
-  points: string[]
+  name: L
+  tag: L
+  check: L
+  body: L
+  points: LArr
 }
 
-export const CHAIN_STAGES: ChainStage[] = [
-  {
-    id: 'source',
-    name: 'Source',
-    tag: 'ORIGIN',
-    check: 'REVIEWED',
-    body: 'Security starts in the repository: who can merge, what dependencies are pinned, and whether a change can be traced to an author and a review.',
-    points: ['Code review as policy', 'Pinned, audited dependencies', 'Signed commits / provenance'],
-  },
-  {
-    id: 'compiler',
-    name: 'Compiler',
-    tag: 'TOOLCHAIN',
-    check: 'PINNED',
-    body: 'The toolchain itself is software — a compromised compiler can backdoor everything it touches. Trusted, pinned, verifiable toolchains close that door.',
-    points: ['Reproducible toolchain versions', 'Compiler hardening flags (CFI, stack protector)', 'No ad-hoc binaries'],
-  },
-  {
-    id: 'build',
-    name: 'Build',
-    tag: 'REPRODUCIBILITY',
-    check: 'REPRODUCED',
-    body: 'A reproducible build lets independent parties compile the same source and get bit-identical output — proof that what shipped matches what was reviewed.',
-    points: ['Deterministic, hermetic builds', 'Independent rebuild verification', 'Signed build attestations'],
-  },
-  {
-    id: 'signing',
-    name: 'Signing',
-    tag: 'CUSTODY',
-    check: 'SIGNED',
-    body: 'Release keys are the hinge between build and device. Their custody — hardware-backed, split, audited — decides whether an update can be forged.',
-    points: ['Hardware-backed signing keys', 'Threshold / split custody', 'Key rotation plan'],
-  },
-  {
-    id: 'ota',
-    name: 'OTA',
-    tag: 'DELIVERY',
-    check: 'VERIFIED',
-    body: 'Updates travel hostile networks. Each package is signature-checked on-device, staged, and protected against rollback to vulnerable versions.',
-    points: ['Signature verification on-device', 'Rollback protection', 'Staged rollout + integrity checks'],
-  },
-  {
-    id: 'device',
-    name: 'Device',
-    tag: 'RUNTIME',
-    check: 'ATTESTED',
-    body: 'Verified boot re-checks the chain at every power-on, and attestation lets remote parties verify which software the device is actually running.',
-    points: ['Verified boot at every start', 'dm-verity at runtime', 'Remote attestation'],
-  },
-]
+const EN_CHAIN = [
+  { id: 'source', name: 'Source', tag: 'ORIGIN', check: 'REVIEWED', body: 'Security starts in the repository: who can merge, what dependencies are pinned, and whether a change can be traced to an author and a review.', points: ['Code review as policy', 'Pinned, audited dependencies', 'Signed commits / provenance'] },
+  { id: 'compiler', name: 'Compiler', tag: 'TOOLCHAIN', check: 'PINNED', body: 'The toolchain itself is software — a compromised compiler can backdoor everything it touches. Trusted, pinned, verifiable toolchains close that door.', points: ['Reproducible toolchain versions', 'Compiler hardening flags (CFI, stack protector)', 'No ad-hoc binaries'] },
+  { id: 'build', name: 'Build', tag: 'REPRODUCIBILITY', check: 'REPRODUCED', body: 'A reproducible build lets independent parties compile the same source and get bit-identical output — proof that what shipped matches what was reviewed.', points: ['Deterministic, hermetic builds', 'Independent rebuild verification', 'Signed build attestations'] },
+  { id: 'signing', name: 'Signing', tag: 'CUSTODY', check: 'SIGNED', body: 'Release keys are the hinge between build and device. Their custody — hardware-backed, split, audited — decides whether an update can be forged.', points: ['Hardware-backed signing keys', 'Threshold / split custody', 'Key rotation plan'] },
+  { id: 'ota', name: 'OTA', tag: 'DELIVERY', check: 'VERIFIED', body: 'Updates travel hostile networks. Each package is signature-checked on-device, staged, and protected against rollback to vulnerable versions.', points: ['Signature verification on-device', 'Rollback protection', 'Staged rollout + integrity checks'] },
+  { id: 'device', name: 'Device', tag: 'RUNTIME', check: 'ATTESTED', body: 'Verified boot re-checks the chain at every power-on, and attestation lets remote parties verify which software the device is actually running.', points: ['Verified boot at every start', 'dm-verity at runtime', 'Remote attestation'] },
+] as const
+
+export const CHAIN_STAGES = deepBi(EN_CHAIN, AR.chain) as ChainStage[]
 
 /* ---------- 13 · Privacy defaults -------------------------------------------- */
 
 export interface DefaultToggle {
   id: string
-  name: string
-  note: string
-  denyLabel: string
-  grantLabel: string
+  name: L
+  note: L
+  denyLabel: L
+  grantLabel: L
 }
 
-export const DEFAULT_TOGGLES: DefaultToggle[] = [
+const EN_DEFAULTS = [
   { id: 'camera', name: 'Camera', note: 'Grant per-use, then revoke; indicator shows when live.', denyLabel: 'DENY', grantLabel: 'GRANTED' },
   { id: 'mic', name: 'Microphone', note: 'The most ambient of sensors; default closed.', denyLabel: 'DENY', grantLabel: 'GRANTED' },
   { id: 'location', name: 'Location', note: 'Coarse over precise, approximate over exact, only while in use.', denyLabel: 'DENY', grantLabel: 'GRANTED' },
   { id: 'bluetooth', name: 'Bluetooth', note: 'Off means undiscoverable and unreachable; on is a radio surface.', denyLabel: 'OFF', grantLabel: 'ON' },
   { id: 'nfc', name: 'NFC', note: 'Enable at the terminal, not for the whole day.', denyLabel: 'OFF', grantLabel: 'ON' },
   { id: 'usb', name: 'USB data', note: 'Charge-only while locked; data requires an unlocked consent.', denyLabel: 'RESTRICTED', grantLabel: 'OPEN' },
-]
+] as const
+
+export const DEFAULT_TOGGLES = deepBi(EN_DEFAULTS, AR.defaults) as DefaultToggle[]
 
 /* ---------- 13.5 · Compartments ------------------------------------------------ */
 
 export interface CompApp {
   id: string
-  name: string
-  perms: string[]
-  net: string
-  note: string
+  name: L
+  perms: LArr
+  net: L
+  note: L
 }
 
 export interface CompProfile {
   id: string
-  name: string
-  sub: string
+  name: L
+  sub: L
   apps: CompApp[]
 }
 
-export const COMPARTMENTS: CompProfile[] = [
+const EN_COMPARTMENTS = [
   {
     id: 'owner',
     name: 'Owner',
@@ -767,7 +750,64 @@ export const COMPARTMENTS: CompProfile[] = [
       { id: 'qr', name: 'QR / ticket viewer', perms: ['Camera (in-app only)'], net: 'Disabled', note: 'Single-purpose, offline: the smallest possible surface for a small task.' },
     ],
   },
+] as const
+
+export const COMPARTMENTS = deepBi(EN_COMPARTMENTS, AR.compartments) as CompProfile[]
+
+/* ---------- 14 · System diagram -------------------------------------------------- */
+
+export interface SysNodeDef {
+  x: number
+  y: number
+  w: number
+  h: number
+  label: L
+  sub: L
+  kind?: 'accent' | 'warn' | 'ext'
+}
+
+const EN_SYS_NODES = [
+  { x: 390, y: 22, w: 220, h: 46, label: 'USER / IDENTITY', sub: 'intent · accounts · profiles', kind: 'accent' },
+  { x: 390, y: 92, w: 220, h: 46, label: 'APPLICATIONS', sub: 'sandboxes · compartments' },
+  { x: 390, y: 162, w: 220, h: 46, label: 'ANDROID FRAMEWORK', sub: 'permissions · binder ipc' },
+  { x: 390, y: 232, w: 220, h: 46, label: 'KERNEL / SELINUX', sub: 'mandatory policy' },
+  { x: 170, y: 322, w: 220, h: 46, label: 'CRYPTO / TEE', sub: 'keymint · fbe keys', kind: 'accent' },
+  { x: 170, y: 392, w: 220, h: 46, label: 'SECURE BOOT', sub: 'avb · rollback fuses' },
+  { x: 170, y: 462, w: 220, h: 46, label: 'HARDWARE', sub: 'soc · fuses · secure element', kind: 'accent' },
+  { x: 610, y: 322, w: 220, h: 46, label: 'NETWORK STACK', sub: 'dns · tls · routing' },
+  { x: 610, y: 392, w: 220, h: 46, label: 'VPN / TOR / DNS', sub: 'tunnels · onion routing', kind: 'accent' },
+  { x: 610, y: 462, w: 220, h: 46, label: 'CELLULAR MODEM', sub: 'separate trust domain', kind: 'warn' },
+  { x: 610, y: 540, w: 220, h: 40, label: 'CELL TOWER', sub: 'radio interface', kind: 'ext' },
+  { x: 610, y: 596, w: 220, h: 40, label: 'CARRIER', sub: 'subscriber records', kind: 'ext' },
 ]
+
+export const SYSTEM_LINKS: Array<{ a: number; b: number; flow?: boolean; dashed?: boolean }> = [
+  { a: 0, b: 1 },
+  { a: 1, b: 2 },
+  { a: 2, b: 3 },
+  { a: 3, b: 4, flow: true },
+  { a: 3, b: 7 },
+  { a: 4, b: 5 },
+  { a: 5, b: 6 },
+  { a: 7, b: 8, flow: true },
+  { a: 8, b: 9 },
+  { a: 9, b: 10 },
+  { a: 10, b: 11 },
+  { a: 6, b: 9, dashed: true },
+]
+
+const EN_SYSTEM = {
+  nodes: EN_SYS_NODES,
+  strip: 'OVER TIME — SUPPLY CHAIN · MONITORING · RECOVERY · ENCRYPTED BACKUPS',
+  zone1: 'DEVICE TRUST DOMAIN',
+  zone2: 'RADIO PATH',
+}
+
+const SYSTEM_BI = deepBi(EN_SYSTEM, AR.system)
+
+export const SYSTEM_NODES = SYSTEM_BI.nodes as SysNodeDef[]
+export const SYSTEM_STRIP = SYSTEM_BI.strip as L
+export const SYSTEM_ZONES = { z1: SYSTEM_BI.zone1 as L, z2: SYSTEM_BI.zone2 as L }
 
 /* ---------- Finale ----------------------------------------------------------- */
 

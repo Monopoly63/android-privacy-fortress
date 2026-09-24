@@ -2,6 +2,8 @@
 
 import { COMPARTMENTS, type CompApp, type CompProfile } from '../data/content'
 import { swapPanel } from '../lib/util'
+import { getLang, onChange } from '../i18n'
+import { ui } from '../i18n/ui'
 
 export function initCompartments(): void {
   const treeHost = document.getElementById('comp-tree')
@@ -10,60 +12,65 @@ export function initCompartments(): void {
   const tree: HTMLElement = treeHost
   const detail: HTMLElement = detailHost
 
-  let selected: { profile: CompProfile; app: CompApp } = {
-    profile: COMPARTMENTS[1],
-    app: COMPARTMENTS[1].apps[0],
+  let selected = { profile: COMPARTMENTS[1].id, app: COMPARTMENTS[1].apps[0].id }
+
+  function find(): { profile: CompProfile; app: CompApp } {
+    const profile = COMPARTMENTS.find((p) => p.id === selected.profile) ?? COMPARTMENTS[1]
+    const app = profile.apps.find((a) => a.id === selected.app) ?? profile.apps[0]
+    return { profile, app }
   }
 
   function renderDetail() {
-    const { profile, app } = selected
+    const lang = getLang()
+    const { profile, app } = find()
     detail.innerHTML = `
-      <span class="cpd-profile">${profile.name}</span>
-      <h3 class="cpd-app">${app.name}</h3>
+      <span class="cpd-profile">${profile.name[lang]}</span>
+      <h3 class="cpd-app">${app.name[lang]}</h3>
       <div class="cpd-block">
-        <h4>Permissions granted</h4>
+        <h4>${ui('comp.hPerms', lang)}</h4>
         <ul class="cpd-perms">${
-          app.perms.length
-            ? app.perms.map((p) => `<li>${p}</li>`).join('')
-            : '<li class="none">NONE — by design</li>'
+          app.perms[lang].length
+            ? app.perms[lang].map((p) => `<li>${p}</li>`).join('')
+            : `<li class="none">${ui('comp.none', lang)}</li>`
         }</ul>
       </div>
       <div class="cpd-block">
-        <h4>Network boundary</h4>
-        <p class="cpd-net">${app.net}</p>
+        <h4>${ui('comp.hNet', lang)}</h4>
+        <p class="cpd-net">${app.net[lang]}</p>
       </div>
-      <p class="cpd-note">${app.note}</p>`
+      <p class="cpd-note">${app.note[lang]}</p>`
     swapPanel(detail)
   }
 
-  function buildTree() {
-    tree.innerHTML = '<p class="comp-tree-root">DEVICE · COMPARTMENT MAP</p>'
+  function render() {
+    const lang = getLang()
+    tree.innerHTML = `<p class="comp-tree-root">${ui('comp.root', lang)}</p>`
     COMPARTMENTS.forEach((profile) => {
       const block = document.createElement('div')
       block.className = 'comp-block'
       block.innerHTML = `
-        <p class="comp-name">${profile.name}</p>
-        <p class="comp-sub">${profile.sub}</p>
+        <p class="comp-name">${profile.name[lang]}</p>
+        <p class="comp-sub">${profile.sub[lang]}</p>
         <div class="comp-apps"></div>`
       const apps = block.querySelector('.comp-apps')!
       profile.apps.forEach((app) => {
         const b = document.createElement('button')
-        b.className = 'comp-app'
-        b.textContent = app.name
-        b.setAttribute('aria-label', `${app.name} in ${profile.name}`)
+        b.className = 'comp-app' + (selected.profile === profile.id && selected.app === app.id ? ' active' : '')
+        b.textContent = app.name[lang]
+        b.setAttribute('aria-label', `${app.name[lang]} — ${profile.name[lang]}`)
         b.addEventListener('click', () => {
-          selected = { profile, app }
-          document.querySelectorAll('.comp-app').forEach((el) => el.classList.remove('active'))
+          selected = { profile: profile.id, app: app.id }
+          tree.querySelectorAll('.comp-app').forEach((el) => el.classList.remove('active'))
           b.classList.add('active')
           renderDetail()
         })
-        if (selected.profile.id === profile.id && selected.app.id === app.id) b.classList.add('active')
         apps.appendChild(b)
       })
       tree.appendChild(block)
     })
+    renderDetail()
   }
 
-  buildTree()
-  renderDetail()
+  render()
+  onChange(render)
 }

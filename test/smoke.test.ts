@@ -27,10 +27,11 @@ describe('bootstrap', () => {
 
 describe('04 · trust boundaries', () => {
   it('lists all layers and reacts to selection', () => {
-    const rows = document.querySelectorAll('.bound-row')
-    expect(rows.length).toBe(9)
-    ;(rows[0] as HTMLElement).click()
-    expect(rows[0].classList.contains('active')).toBe(true)
+    expect(document.querySelectorAll('.bound-row').length).toBe(9)
+    // rows re-render on selection — re-query after each interaction
+    ;(document.querySelectorAll('.bound-row')[0] as HTMLElement).click()
+    const locked = document.querySelectorAll('.bound-row')[0]
+    expect(locked.classList.contains('active')).toBe(true)
     expect(document.querySelector('#bounds-detail .bd-name')!.textContent).toBe('Applications')
     // keyboard escape releases lock
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
@@ -46,11 +47,11 @@ describe('05 · architecture', () => {
 
 describe('06 · domains', () => {
   it('renders ten domains and switches detail', () => {
-    const btns = document.querySelectorAll('.domain-btn')
-    expect(btns.length).toBe(10)
-    ;(btns[6] as HTMLElement).click()
+    expect(document.querySelectorAll('.domain-btn').length).toBe(10)
+    // list re-renders on selection — re-query after each interaction
+    ;(document.querySelectorAll('.domain-btn')[6] as HTMLElement).click()
     expect(document.querySelector('#domains-detail .dd-title')!.textContent).toBe('Network Security & Anonymity')
-    ;(btns[0] as HTMLElement).click()
+    ;(document.querySelectorAll('.domain-btn')[0] as HTMLElement).click()
     expect(document.querySelector('#domains-detail .dd-title')!.textContent).toBe('Threat Modeling')
   })
 })
@@ -145,5 +146,29 @@ describe('15 · finale', () => {
   it('shows the device and quote', () => {
     expect(document.querySelector('#finale-device svg')).toBeTruthy()
     expect(document.querySelector('.finale-quote')!.textContent).toContain('architecture of trust')
+  })
+})
+
+describe('i18n · Arabic / RTL', () => {
+  it('switches to Arabic with RTL and re-renders every module, then back', async () => {
+    const { setLang } = await import('../src/i18n')
+    setLang('ar')
+    expect(document.documentElement.dir).toBe('rtl')
+    expect(document.documentElement.lang).toBe('ar')
+    expect(document.querySelector('.display')!.textContent).toContain('الطبقات')
+    expect(document.querySelector('#why-title')!.textContent).toContain('لا يكفي')
+    expect(document.querySelectorAll('.bound-row').length).toBe(9)
+    expect(document.querySelector('#bounds-detail .bd-name')!.textContent!.length).toBeGreaterThan(3)
+    expect(document.querySelectorAll('.domain-btn').length).toBe(10)
+    expect(document.querySelectorAll('.sim-scenario').length).toBe(3)
+    expect(document.querySelectorAll('.net-fact').length).toBeGreaterThan(0)
+    expect(document.querySelectorAll('.sc-tile').length).toBe(6)
+    expect(document.querySelectorAll('.chain-stage').length).toBe(6)
+    expect(document.querySelectorAll('.switch').length).toBe(6)
+    expect(document.querySelectorAll('.comp-app').length).toBe(12)
+    expect(document.querySelectorAll('#system-svg .sys-node').length).toBeGreaterThanOrEqual(13)
+    setLang('en')
+    expect(document.documentElement.dir).toBe('ltr')
+    expect(document.querySelector('.display')!.textContent).toContain('layered security system')
   })
 })

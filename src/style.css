@@ -176,6 +176,23 @@ body {
   transition: color 0.3s;
 }
 .nav-links a:hover { color: var(--text); }
+.nav-tools { display: flex; align-items: center; gap: 12px; }
+
+/* --- language switch --------------------------------------------------- */
+.lang-switch {
+  display: flex; align-items: center; gap: 2px;
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px;
+  background: rgba(255,255,255,0.03);
+}
+.lang-btn {
+  border: none; background: transparent; cursor: pointer;
+  font: 600 11px var(--font-display); letter-spacing: 0.04em;
+  color: var(--text-3); padding: 5px 11px; border-radius: 999px;
+  transition: background 0.3s, color 0.3s;
+}
+.lang-btn:hover { color: var(--text); }
+.lang-btn.active { background: var(--steel-faint); color: var(--steel); }
+.lang-btn[lang="ar"] { font-family: var(--font-body); font-size: 13px; line-height: 1; padding-block: 3.5px; }
 .nav-menu { display: none; }
 
 /* --- WebGL stage --------------------------------------------------------- */
@@ -696,4 +713,74 @@ body {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
   .reveal { opacity: 1; transform: none; }
   .scroll-cue-line::after { display: none; }
+}
+
+/* ==========================================================================
+   ARABIC / RTL — font system, typography rules, mirrored layout
+   ========================================================================== */
+
+html[lang="ar"] {
+  --font-display: "IBM Plex Sans Arabic", "Space Grotesk", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "IBM Plex Sans Arabic", ui-monospace, "SF Mono", monospace;
+}
+
+/* Arabic is cursive: letter-spacing breaks letter joining — zero it everywhere it was set. */
+html[lang="ar"] :is(
+  .eyebrow, .figure-note, .mono, .nav-brand-text, .nav-brand-sub, .dev-label,
+  .step-idx, .b-idx, .b-tag, .dd-tagline, .dd-num, .pd-badge, .pm-title, .pm-pill,
+  .sc-mit, .meta-col-title, .cd-sub, .ds-label, .cpd-profile, .sys-zone-label,
+  .sys-label, .sys-sub, .sim-log-title, .sim-note, .hero-meta, .footer-line,
+  .term-name, .arch-node, .net-node-label, .net-node-sub, .bd-role, .bd-col h4,
+  .dd-block h4, .cpd-block h4, .pd-row .k, .bb-card-title, .bb-node, .bb-link-tag,
+  .bb-mit, .chain-stage small, .cd-points li, .cpd-perms li, .story-cue, .dr-state,
+  .scroll-cue, .bd-note, .dd-relations, .comp-tree-root, .sn-status, .net-fact b,
+  .pm-title, .footer-link-portfolio, .bound-row .b-name
+) {
+  letter-spacing: 0;
+}
+
+html[lang="ar"] body { line-height: 1.85; }
+html[lang="ar"] .display { line-height: 1.24; letter-spacing: 0; }
+html[lang="ar"] .h2 { line-height: 1.28; letter-spacing: 0; }
+html[lang="ar"] .h3 { line-height: 1.3; letter-spacing: 0; }
+html[lang="ar"] .finale-quote { line-height: 1.32; letter-spacing: 0; }
+html[lang="ar"] .lede { line-height: 1.9; }
+
+/* code-like blocks stay LTR even in Arabic (industry convention) */
+html[lang="ar"] .bb-tree,
+html[lang="ar"] .meta-cipher,
+html[lang="ar"] .sim-log-lines {
+  direction: ltr;
+  text-align: left;
+}
+
+/* --- mirrored layout ------------------------------------------------------ */
+[dir="rtl"] .story-head { left: auto; right: var(--pad); }
+[dir="rtl"] .story-side { right: auto; left: clamp(20px, 5vw, 70px); }
+[dir="rtl"] .story-step { border-left: none; border-right: 1px solid var(--line); padding-left: 0; padding-right: 14px; transform: translateX(-6px); }
+[dir="rtl"] .story-step.active { border-right-color: var(--steel); }
+[dir="rtl"] .dev-label { transform: translate(-10px, -50%); flex-direction: row-reverse; }
+[dir="rtl"] .dev-label .dev-label-line { background: linear-gradient(270deg, var(--steel), transparent); }
+[dir="rtl"] .arch-node:hover { transform: translateX(-3px); }
+[dir="rtl"] .sim-connector { margin-left: 0; margin-right: 29px; }
+[dir="rtl"] .sim-node .sn-status { text-align: left; }
+[dir="rtl"] .chain-check { right: auto; left: -5px; }
+[dir="rtl"] .comp-block { border-left: none; border-right: 1px solid var(--line-strong); padding-left: 0; padding-right: 20px; }
+[dir="rtl"] .comp-block::before { left: auto; right: -3px; transform: translateX(100%); padding-right: 0; padding-left: 8px; }
+[dir="rtl"] .switch::after { left: auto; right: 3px; }
+[dir="rtl"] .switch[aria-checked="true"]::after { transform: translateX(-20px); }
+[dir="rtl"] .dr-state { text-align: left; }
+[dir="rtl"] .pd-row { grid-template-columns: 1fr 110px; }
+[dir="rtl"] .pd-row .k { text-align: start; }
+[dir="rtl"] .skip-link { left: auto; right: 16px; }
+[dir="rtl"] .bounds-stack.dimming .bound-row:not(.active) { opacity: 0.35; }
+[dir="rtl"] .meta-list li .mono { text-align: left; }
+
+/* mobile RTL story adjustments */
+@media (max-width: 980px) {
+  [dir="rtl"] .story-head { right: var(--pad); left: var(--pad); }
+  [dir="rtl"] .story-side { left: var(--pad); right: var(--pad); }
+  [dir="rtl"] .story-step { border-right: none; border-top: 1px solid var(--line); padding-right: 0; padding-top: 10px; transform: none; }
+  [dir="rtl"] .story-step.active { border-top-color: var(--steel); }
 }
