@@ -4,6 +4,11 @@
   "version": "1.0.0",
   "type": "module",
   "description": "A smartphone engineered as a layered security system — an interactive architecture study.",
+  "author": {
+    "name": "Abdulmoin Hablas",
+    "url": "https://hablas.tech"
+  },
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",

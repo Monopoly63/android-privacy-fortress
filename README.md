@@ -1,5 +1,7 @@
 # Android Privacy Fortress
 
+> **By [Abdulmoin Hablas](https://hablas.tech)** · © 2026 — All rights reserved (see [LICENSE](./LICENSE)) · Live: <https://android-privacy-fortress.vercel.app>
+
 An interactive essay on the smartphone as a **layered security system** — hardware trust,
 verified boot, OS isolation, cryptography, network control, identity separation, metadata
 protection, and physical security, explored through a scroll-driven 3D device and a set of
