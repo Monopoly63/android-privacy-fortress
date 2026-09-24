@@ -13,6 +13,13 @@ separation, and carefully defined boundaries.
 
 ---
 
+
+### Pages
+
+- `/` — the architecture study (scroll-driven WebGL journey through the seven layers)
+- `/playbook` — The Hardening Playbook: 18 tracked, prioritized hardening moves (EN/AR)
+- `/lab` — **◇ Visual**: a wordless, scroll-driven WebGL circuit (silicon → board → signal storm → crypto core). No copy inside; attribution in the corner.
+
 ## Run it
 
 ```bash

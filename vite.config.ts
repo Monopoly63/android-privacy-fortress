@@ -19,6 +19,7 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         playbook: resolve(__dirname, 'playbook.html'),
+        lab: resolve(__dirname, 'lab.html'),
       },
     },
   },
