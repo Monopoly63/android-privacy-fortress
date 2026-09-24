@@ -4,6 +4,7 @@
    No copy. Glyphs and geometry only.
    ========================================================================== */
 
+import '../style.css'
 import * as THREE from 'three'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
@@ -262,6 +263,12 @@ function boot(): void {
   const pulseGeo = new THREE.BufferGeometry()
   pulseGeo.setAttribute('position', new THREE.BufferAttribute(pulsePos, 3))
   const pulses = new THREE.Points(pulseGeo, pulseMat)
+  // fallback route just in case trace generation ever yields nothing
+  if (polylines.length === 0) {
+    const a = new THREE.Vector3(-2.5, 0.02, 0)
+    const b = new THREE.Vector3(2.5, 0.02, 0)
+    polylines.push({ pts: [a, b], cum: [0, a.distanceTo(b)], total: a.distanceTo(b) })
+  }
   const pulseState = Array.from({ length: pulseCount }, () => ({
     poly: polylines[Math.floor(Math.random() * polylines.length)],
     t: Math.random(),
