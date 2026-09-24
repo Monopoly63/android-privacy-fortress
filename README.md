@@ -73,3 +73,11 @@ claimed to be “unhackable”, “untraceable”, or “100% secure”. Content
 privacy, anonymity, and physical security are treated as distinct properties throughout.
 Educational visualization — not affiliated with Google or any device maker, and not
 security advice.
+
+## Credits
+
+**Android Privacy Fortress** — Designed & engineered by **[Abdulmoin Hablas](https://hablas.tech)**
+
+© 2026 Abdulmoin Hablas. All rights reserved. This repository's code, design, and content
+are protected under the custom license in [LICENSE](./LICENSE) — attribution required,
+no commercial reuse without written permission.
