@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Android Privacy Fortress — an interactive study of the smartphone as a layered security system: hardware trust, verified boot, isolation, cryptography, network control, identity separation, metadata protection and physical security." />
+  <meta name="theme-color" content="#050608" />
+  <title>Android Privacy Fortress — A Layered Security System</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='9' y='3' width='14' height='26' rx='3' fill='none' stroke='%238fb3d9' stroke-width='2'/%3E%3Ccircle cx='16' cy='24' r='1.6' fill='%238fb3d9'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <a class="skip-link" href="#why">Skip to content</a>
+
+  <!-- Ambient backdrop -->
+  <div class="atmosphere" aria-hidden="true"></div>
+  <div class="grid-lines" aria-hidden="true"></div>
+
+  <!-- Fixed WebGL stage (hero + device story) -->
+  <canvas id="gl" class="gl-canvas" aria-hidden="true"></canvas>
+  <div id="device-labels" class="device-labels" aria-hidden="true"></div>
+
+  <!-- Progress -->
+  <div class="progress-rail" aria-hidden="true"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <!-- Navigation -->
+  <header class="nav" id="nav">
+    <a class="nav-brand" href="#hero" aria-label="Android Privacy Fortress — home">
+      <svg width="15" height="15" viewBox="0 0 32 32" aria-hidden="true"><rect x="9" y="3" width="14" height="26" rx="3.5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="16" cy="23.6" r="1.8" fill="currentColor"/></svg>
+      <span class="nav-brand-text">PRIVACY&nbsp;FORTRESS</span>
+      <span class="nav-brand-sub">SYSTEMS VIEW</span>
+    </a>
+    <nav class="nav-links" id="nav-links" aria-label="Sections">
+      <a href="#device-story">Device</a>
+      <a href="#boundaries">Boundaries</a>
+      <a href="#domains">Domains</a>
+      <a href="#simulator">Simulator</a>
+      <a href="#network">Network</a>
+      <a href="#physical">Physical</a>
+      <a href="#supplychain">Supply&nbsp;Chain</a>
+      <a href="#system">System</a>
+    </nav>
+    <button class="nav-menu" id="nav-menu" aria-expanded="false" aria-controls="nav-links" aria-label="Open section menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <main id="main">
+
+    <!-- ============ 01 · HERO ============ -->
+    <section class="hero" id="hero" aria-label="Introduction">
+      <div class="hero-copy">
+        <p class="eyebrow reveal">Android Privacy Fortress · An interactive architecture study</p>
+        <h1 class="display reveal d1">A smartphone engineered<br />as a <em>layered security system.</em></h1>
+        <p class="lede reveal d2">Privacy is not a single feature. It is the combined result of hardware trust,
+          verified boot, operating-system isolation, cryptography, network control, identity separation,
+          metadata protection, and physical security.</p>
+        <div class="hero-actions reveal d3">
+          <a class="btn btn-solid" href="#device-story">Explore the architecture</a>
+          <a class="btn btn-ghost" href="#simulator">Run the simulation</a>
+        </div>
+        <ul class="hero-meta reveal d4" role="list">
+          <li><span class="mono">07</span> trust layers</li>
+          <li><span class="mono">10</span> security domains</li>
+          <li><span class="mono">03</span> attack simulations</li>
+        </ul>
+      </div>
+      <div class="scroll-cue" aria-hidden="true">
+        <span class="mono">SCROLL</span><span class="scroll-cue-line"></span>
+      </div>
+    </section>
+
+    <!-- ============ 02 · WHY A SYSTEM ============ -->
+    <section class="section" id="why" aria-labelledby="why-title">
+      <div class="container">
+        <p class="eyebrow reveal">02 · First principles</p>
+        <h2 class="h2 reveal d1" id="why-title">One boundary is never enough.</h2>
+        <p class="lede reveal d2">A single control — a VPN, a password, a permission prompt — protects one
+          surface and leaves the rest exposed. Real privacy emerges from layers, where each layer constrains
+          a different kind of failure.</p>
+
+        <div class="triad" role="list">
+          <article class="panel reveal" role="listitem">
+            <span class="panel-num mono">01</span>
+            <h3>A VPN alone</h3>
+            <p>Hides traffic from the local network — not your device identifiers, not your metadata,
+               and nothing an installed app already knows about you.</p>
+          </article>
+          <article class="panel reveal d1" role="listitem">
+            <span class="panel-num mono">02</span>
+            <h3>Encryption alone</h3>
+            <p>Protects data at rest. It does not stop an unlocked session, a compromised app,
+               or a radio that keeps announcing who you are to the network.</p>
+          </article>
+          <article class="panel reveal d2" role="listitem">
+            <span class="panel-num mono">03</span>
+            <h3>Permissions alone</h3>
+            <p>Consent prompts are not isolation. Without sandboxing and mandatory policy,
+               one app's bug becomes every other app's breach.</p>
+          </article>
+        </div>
+
+        <div class="terms reveal" aria-label="Precise terminology">
+          <div class="term"><span class="term-name mono">CONFIDENTIALITY</span><span class="term-def">Data is readable only by who holds the key.</span></div>
+          <div class="term"><span class="term-name mono">INTEGRITY</span><span class="term-def">Software and data remain unmodified and verifiable.</span></div>
+          <div class="term"><span class="term-name mono">PRIVACY</span><span class="term-def">Control over what is revealed, to whom, and when.</span></div>
+          <div class="term"><span class="term-name mono">ANONYMITY</span><span class="term-def">Action without a stable, linkable identity. Distinct from privacy.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 03 · DEVICE STORY (pinned, WebGL) ============ -->
+    <section class="story" id="device-story" aria-labelledby="story-title">
+      <div class="story-pin">
+        <div class="story-head">
+          <p class="eyebrow">03 · The device, opened</p>
+          <h2 class="h2" id="story-title">Seven layers between you and the silicon.</h2>
+        </div>
+        <div class="story-side">
+          <ol class="story-steps" id="story-steps" role="list">
+            <li class="story-step" data-step="0"><span class="mono step-idx">01</span><span class="step-body"><b>Hardware</b><small>SoC, fuses, boot ROM. The root software cannot rewrite.</small></span></li>
+            <li class="story-step" data-step="1"><span class="mono step-idx">02</span><span class="step-body"><b>Secure boot</b><small>Each stage verifies the next signature before it may run.</small></span></li>
+            <li class="story-step" data-step="2"><span class="mono step-idx">03</span><span class="step-body"><b>Kernel · SELinux</b><small>Mandatory policy decides what every process may touch.</small></span></li>
+            <li class="story-step" data-step="3"><span class="mono step-idx">04</span><span class="step-body"><b>TEE · Key custody</b><small>A processor inside the processor; keys never leave it.</small></span></li>
+            <li class="story-step" data-step="4"><span class="mono step-idx">05</span><span class="step-body"><b>Android framework</b><small>Permission decisions and audited IPC between components.</small></span></li>
+            <li class="story-step" data-step="5"><span class="mono step-idx">06</span><span class="step-body"><b>App sandboxes</b><small>Every application is its own failure domain.</small></span></li>
+            <li class="story-step" data-step="6"><span class="mono step-idx">07</span><span class="step-body"><b>You</b><small>Identity, choices, intent. The layer all of it serves.</small></span></li>
+          </ol>
+          <div class="story-rail" aria-hidden="true"><div class="story-rail-fill" id="story-rail-fill"></div></div>
+        </div>
+        <p class="story-cue mono" id="story-cue" aria-hidden="true">SCROLL TO OPEN THE DEVICE</p>
+      </div>
+    </section>
+
+    <!-- ============ 04 · TRUST BOUNDARIES ============ -->
+    <section class="section section-alt" id="boundaries" aria-labelledby="boundaries-title">
+      <div class="container">
+        <p class="eyebrow reveal">04 · Trust boundaries &amp; attack surface</p>
+        <h2 class="h2 reveal d1" id="boundaries-title">Every layer draws a line.</h2>
+        <p class="lede reveal d2">Select a layer to see what it can reach, what constrains it, and what stays
+          outside its authority. The boundaries — not the features — are the product.</p>
+
+        <div class="bounds-layout">
+          <div class="bounds-stack" id="bounds-stack" role="tablist" aria-label="Trust layers"></div>
+          <aside class="bounds-detail panel" id="bounds-detail" aria-live="polite"></aside>
+        </div>
+        <p class="figure-note mono reveal">HOVER OR FOCUS A LAYER · CLICK TO LOCK SELECTION · ESC TO RELEASE</p>
+      </div>
+    </section>
+
+    <!-- ============ 05 · ARCHITECTURE ============ -->
+    <section class="section" id="architecture" aria-labelledby="architecture-title">
+      <div class="container">
+        <p class="eyebrow reveal">05 · Two stacks, one device</p>
+        <h2 class="h2 reveal d1" id="architecture-title">The radio lives a separate life.</h2>
+        <p class="lede reveal d2">The application stack and the network path are related but not equivalent
+          trust domains. Data crosses between them through narrow, audited interfaces — and what the radio
+          must reveal, the OS cannot veto.</p>
+
+        <div class="arch-cols reveal d3">
+          <div class="arch-stack" id="arch-device" aria-label="Device stack"></div>
+          <div class="arch-bridge" aria-hidden="true">
+            <div class="arch-bridge-line"></div>
+            <span class="arch-bridge-tag mono">RIL · NARROW AUDITED INTERFACE</span>
+            <div class="arch-sep-label mono">TRUST<br/>BOUNDARY</div>
+          </div>
+          <div class="arch-stack arch-stack-net" id="arch-network" aria-label="Network path"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 06 · TEN DOMAINS ============ -->
+    <section class="section section-alt" id="domains" aria-labelledby="domains-title">
+      <div class="container">
+        <p class="eyebrow reveal">06 · Ten security domains</p>
+        <h2 class="h2 reveal d1" id="domains-title">The system, domain by domain.</h2>
+        <p class="lede reveal d2">Each domain protects different assets against different failures.
+          Select one to inspect its objective, attack surface, and dependencies.</p>
+
+        <div class="domains-layout reveal d3">
+          <ol class="domains-list" id="domains-list" role="tablist" aria-label="Security domains" aria-orientation="vertical"></ol>
+          <div class="domains-detail panel" id="domains-detail" aria-live="polite"></div>
+        </div>
+        <p class="figure-note mono reveal">↑ ↓ ARROW KEYS MOVE SELECTION · ENTER OPENS</p>
+      </div>
+    </section>
+
+    <!-- ============ 07 · SIMULATOR ============ -->
+    <section class="section" id="simulator" aria-labelledby="simulator-title">
+      <div class="container">
+        <p class="eyebrow reveal">07 · Miniature functional model</p>
+        <h2 class="h2 reveal d1" id="simulator-title">Watch the boundaries hold.</h2>
+        <p class="lede reveal d2">Three common threat scenarios traced through the architecture.
+          An educational model of how the layers interact — not a security guarantee.</p>
+
+        <div class="sim-layout reveal d3">
+          <div class="sim-controls">
+            <div class="sim-scenarios" id="sim-scenarios" role="tablist" aria-label="Attack scenarios"></div>
+            <button class="btn btn-solid sim-play" id="sim-play">Run scenario</button>
+            <p class="sim-note mono" id="sim-note"></p>
+          </div>
+          <div class="sim-stage panel" id="sim-stage" aria-label="Scenario flow"></div>
+          <div class="sim-log panel" aria-label="Event log">
+            <p class="sim-log-title mono">EVENT LOG</p>
+            <ol class="sim-log-lines" id="sim-log" aria-live="polite"></ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 08 · NETWORK + METADATA ============ -->
+    <section class="section section-alt" id="network" aria-labelledby="network-title">
+      <div class="container">
+        <p class="eyebrow reveal">08 · Network &amp; metadata</p>
+        <h2 class="h2 reveal d1" id="network-title">Where does your traffic actually go?</h2>
+        <p class="lede reveal d2">Switch the routing mode and watch what changes — and, more importantly,
+          what doesn't.</p>
+
+        <div class="net-layout reveal d3">
+          <div class="net-modes" id="net-modes" role="tablist" aria-label="Routing mode">
+            <button class="net-mode" role="tab" data-mode="direct" aria-selected="true">Direct</button>
+            <button class="net-mode" role="tab" data-mode="vpn" aria-selected="false">VPN</button>
+            <button class="net-mode" role="tab" data-mode="tor" aria-selected="false">Tor</button>
+          </div>
+          <figure class="net-figure panel">
+            <svg id="net-svg" viewBox="0 0 920 380" role="img" aria-label="Network path diagram"></svg>
+            <figcaption class="figure-note mono" id="net-caption"></figcaption>
+          </figure>
+          <div class="net-facts" id="net-facts" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="container metadata-block" id="metadata">
+        <h3 class="h3 reveal">Content privacy <span class="neq mono">≠</span> metadata privacy.</h3>
+        <p class="lede reveal d1">Even a perfectly encrypted message leaves a shape behind.</p>
+        <div class="meta-cols reveal d2">
+          <div class="meta-col panel">
+            <p class="meta-col-title mono">CONTENT — SEALED</p>
+            <div class="meta-cipher" id="meta-cipher" aria-label="Encrypted message, unreadable without the key"></div>
+            <p class="meta-col-note">Unreadable without the key. This is what encryption buys you.</p>
+          </div>
+          <div class="meta-col panel">
+            <p class="meta-col-title mono meta-col-title-warn">METADATA — STILL VISIBLE</p>
+            <ul class="meta-list" id="meta-list"></ul>
+            <p class="meta-col-note">Often enough to reconstruct who, when, where and how often.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 09 · BASEBAND ============ -->
+    <section class="section" id="baseband" aria-labelledby="baseband-title">
+      <div class="container">
+        <p class="eyebrow reveal">09 · Cellular / baseband</p>
+        <h2 class="h2 reveal d1" id="baseband-title">A second computer in your pocket.</h2>
+        <p class="lede reveal d2">The cellular modem is its own processor with its own firmware, and it must
+          identify itself to the network. Hardening Android does not make the device invisible to the
+          cellular network — this is an architectural fact, not a configuration oversight.</p>
+
+        <div class="bb-layout reveal d3">
+          <div class="bb-card panel">
+            <p class="bb-card-title mono">ANDROID OS — HARDENED</p>
+            <ul class="bb-tree mono">
+              <li>├── APPS <span class="bb-ok">· sandboxed</span></li>
+              <li>├── KERNEL <span class="bb-ok">· SELinux enforcing</span></li>
+              <li>└── SYSTEM SERVICES <span class="bb-ok">· least privilege</span></li>
+            </ul>
+            <p class="bb-card-note">Controls what software may do on the device.</p>
+          </div>
+          <div class="bb-link" aria-hidden="true">
+            <div class="bb-link-line"></div>
+            <span class="mono bb-link-tag">COMMANDS ONLY —<br/>NOT RADIO TRUTH</span>
+          </div>
+          <div class="bb-card panel bb-card-radio">
+            <p class="bb-card-title mono">CELLULAR MODEM — SEPARATE TRUST DOMAIN</p>
+            <div class="bb-chain">
+              <span class="bb-node">MODEM</span><span class="bb-arrow">↓</span>
+              <span class="bb-node">CELL TOWER</span><span class="bb-arrow">↓</span>
+              <span class="bb-node bb-node-ext">CARRIER</span>
+            </div>
+            <p class="bb-card-note">Controls what the radio says. The OS can ask; it cannot verify.</p>
+          </div>
+        </div>
+
+        <ul class="bb-facts reveal" role="list">
+          <li><b>IMEI</b><span>The device's radio identity — announced to register on any network.</span></li>
+          <li><b>IMSI / SIM</b><span>Subscriber identity — ties the radio to an account and a person.</span></li>
+          <li><b>Cell association</b><span>Towers know when you are near, and for how long. That is coarse location, continuously.</span></li>
+          <li><b>Signalling</b><span>Registration and paging happen even with no apps running at all.</span></li>
+        </ul>
+        <p class="bb-mit mono reveal d1">MITIGATIONS · AIRPLANE MODE (RADIO OFF) · NO-SIM / DISABLED eSIM · TREAT TOR &amp; VPN AS CONTENT PROTECTION, NOT RADIO SILENCE</p>
+      </div>
+    </section>
+
+    <!-- ============ 10 · PHYSICAL SECURITY ============ -->
+    <section class="section section-alt" id="physical" aria-labelledby="physical-title">
+      <div class="container">
+        <p class="eyebrow reveal">10 · Physical / forensic security</p>
+        <h2 class="h2 reveal d1" id="physical-title">When the device changes hands.</h2>
+        <p class="lede reveal d2">Assume the phone is physically held by someone hostile. What is still
+          protected depends entirely on the state the device is in.</p>
+
+        <div class="phys-layout reveal d3">
+          <div class="phys-states" id="phys-states" role="tablist" aria-label="Device state"></div>
+          <div class="phys-detail panel" id="phys-detail" aria-live="polite"></div>
+          <div class="phys-matrix panel" id="phys-matrix"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11 · SIDE CHANNELS ============ -->
+    <section class="section" id="sidechannels" aria-labelledby="sidechannels-title">
+      <div class="container">
+        <p class="eyebrow reveal">11 · Side channels</p>
+        <h2 class="h2 reveal d1" id="sidechannels-title">Information escapes through behaviour.</h2>
+        <p class="lede reveal d2">Even when direct access is restricted, observable behaviour can sometimes
+          reveal information — through time, energy, radiation, or rhythm. The advanced edge of the discipline.</p>
+        <div class="sc-grid reveal d3" id="sc-grid"></div>
+        <p class="figure-note mono reveal">RESEARCH-LEVEL SURFACE · USUALLY REQUIRES PROXIMITY, EQUIPMENT, OR COMPROMISED CODE RUNNING ON-DEVICE</p>
+      </div>
+    </section>
+
+    <!-- ============ 12 · SUPPLY CHAIN ============ -->
+    <section class="section section-alt" id="supplychain" aria-labelledby="supplychain-title">
+      <div class="container">
+        <p class="eyebrow reveal">12 · Supply chain</p>
+        <h2 class="h2 reveal d1" id="supplychain-title">Security begins before first boot.</h2>
+        <p class="lede reveal d2">If the software that ships is not the software that was reviewed, every later
+          layer stands on sand. Follow the chain from source to silicon.</p>
+
+        <ol class="chain reveal d3" id="chain" role="tablist" aria-label="Supply chain stages"></ol>
+        <div class="chain-detail panel reveal d4" id="chain-detail" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ============ 13 · PRIVACY BY DEFAULT ============ -->
+    <section class="section" id="defaults" aria-labelledby="defaults-title">
+      <div class="container">
+        <p class="eyebrow reveal">13 · Privacy by default</p>
+        <h2 class="h2 reveal d1" id="defaults-title">Trust nothing until it is granted.</h2>
+        <p class="lede reveal d2">A secure system minimizes trust by default and grants access intentionally.
+          Set the baseline, then watch the exposure counter respond.</p>
+
+        <div class="defaults-layout reveal d3">
+          <div class="defaults-panel panel" id="defaults-panel"></div>
+          <div class="defaults-summary panel" id="defaults-summary" aria-live="polite"></div>
+        </div>
+        <p class="figure-note mono reveal">AN ILLUSTRATIVE POLICY PANEL — THE PRINCIPLE, NOT A REAL SETTINGS SCREEN</p>
+      </div>
+    </section>
+
+    <!-- ============ 13.5 · COMPARTMENTS ============ -->
+    <section class="section section-alt" id="compartments" aria-labelledby="compartments-title">
+      <div class="container">
+        <p class="eyebrow reveal">13 · Application compartments</p>
+        <h2 class="h2 reveal d1" id="compartments-title">Divide, so nothing conquers all.</h2>
+        <p class="lede reveal d2">Profiles are floor plans: separate rooms with separate keys. Compromise of
+          one compartment is not compromise of the device.</p>
+
+        <div class="comp-layout reveal d3">
+          <div class="comp-tree panel" id="comp-tree"></div>
+          <div class="comp-detail panel" id="comp-detail" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 14 · COMPLETE SYSTEM ============ -->
+    <section class="section" id="system" aria-labelledby="system-title">
+      <div class="container">
+        <p class="eyebrow reveal">14 · The complete system</p>
+        <h2 class="h2 reveal d1" id="system-title">Every layer, one architecture.</h2>
+        <p class="lede reveal d2">Hardware, boot integrity, isolation, keys, profiles, tunnels, identifiers,
+          the modem, the carrier, backups, monitoring, recovery — assembled.</p>
+        <figure class="system-figure reveal d3">
+          <svg id="system-svg" viewBox="0 0 1000 640" role="img" aria-label="Complete system architecture"></svg>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ============ 15 · FINALE ============ -->
+    <section class="finale" id="finale" aria-labelledby="finale-title">
+      <div class="finale-inner">
+        <div class="finale-device" id="finale-device" aria-hidden="true"></div>
+        <h2 class="finale-quote reveal" id="finale-title">Security is not a feature.<br/>It is an architecture of trust.</h2>
+        <p class="finale-sub reveal d2">A privacy-focused Android device is not protected by one feature.
+          It is protected by layers of trust, isolation, cryptography, controlled communication,
+          identity separation, and carefully defined boundaries.</p>
+      </div>
+      <footer class="footer">
+        <p class="mono footer-line">ANDROID PRIVACY FORTRESS · AN INTERACTIVE ESSAY ON LAYERED MOBILE SECURITY</p>
+        <p class="footer-fine">Educational visualization. Describes general Android security architecture;
+          not affiliated with Google or any device maker, and not security advice. No feature makes a device
+          “unhackable” — layers raise costs and shrink surfaces.</p>
+      </footer>
+    </section>
+
+  </main>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
